@@ -32,12 +32,12 @@
 	<!-- Extensions -->
 	<extension>
 		<point>org.openmrs.admin.list</point>
-		<class>@MODULE_PACKAGE@.queue.web.extension.html.AdminList</class>
+		<class>@MODULE_PACKAGE@.queue.extension.html.AdminList</class>
 	</extension>
 
 	<extension>
 		<point>org.openmrs.gutter.tools</point>
-		<class>@MODULE_PACKAGE@.queue.web.extension.html.GutterExtension</class>
+		<class>@MODULE_PACKAGE@.queue.extension.html.GutterExtension</class>
 	</extension>
 	<!-- /Extensions -->
 

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  *
  */
 @Controller
+@RequestMapping(value = "/module/sana/lexicon/")
 public class LexiconController {
 	
 	/** Logger for this class and subclasses */
@@ -29,14 +30,14 @@ public class LexiconController {
     
 
 	/** Success form view name */
-	private final String SUCCESS_VIEW = "/module/sana/lexicon";
+	private final String SUCCESS_VIEW = "/module/sana/lexicon/lexicon";
 	
 	//TODO
 	/**
 	 * Returns a view of all concept sources associated with ...?
 	 */
 
-	@RequestMapping(value = "/module/sana/queue/lexicon.form", method = RequestMethod.GET)
+	@RequestMapping(value = "lexicon.form", method = RequestMethod.GET)
     public String handleRequest(ModelMap map) {
     	List<ConceptSource> sources = Context.getConceptService()
     		.getAllConceptSources();
@@ -45,7 +46,7 @@ public class LexiconController {
         return SUCCESS_VIEW;
     }
 	
-	@RequestMapping(value = "/module/sana/queue/lexicon.form", method = RequestMethod.POST)
+	@RequestMapping(value = "lexicon.form", method = RequestMethod.POST)
 	public void onSubmit(HttpServletRequest request, 
 			HttpServletResponse response)
 	{

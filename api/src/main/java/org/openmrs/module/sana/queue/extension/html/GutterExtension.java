@@ -49,7 +49,7 @@ public class GutterExtension extends LinkExt {
       * @return The url that this link should go to 
       */
      public String getUrl(){
-    	 return "module/"+Module.ID+"/queue.form";
+    	 return "module/"+Module.ID+"/queue/queue.form";
      }
 
     /**

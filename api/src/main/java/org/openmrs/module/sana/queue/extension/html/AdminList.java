@@ -34,11 +34,11 @@ public class AdminList extends AdministrationSectionExt {
         
         Map<String, String> map = new HashMap<String, String>();
         
-        map.put("module/"+Module.ID+"/queue.form", Module.ID+".view");
-        map.put("module/"+Module.ID+"/lexicon.form", Module.ID+".lexicon");
-        map.put("module/"+Module.ID+"/mdsLog.form", Module.ID+".mdsLog");
-        map.put("module/"+Module.ID+"/mdsAdmin.form", Module.ID+".mdsAdmin");
-    	map.put("module/"+Module.ID+"/mediaViewer.form",
+        map.put("module/"+Module.ID+"/queue/queue.form", Module.ID+".view");
+        map.put("module/"+Module.ID+"/lexicon/lexicon.form", Module.ID+".lexicon");
+        map.put("module/"+Module.ID+"/mds/mdsLog.form", Module.ID+".mdsLog");
+        map.put("module/"+Module.ID+"/mds/mdsAdmin.form", Module.ID+".mdsAdmin");
+    	map.put("module/"+Module.ID+"/mediaviewer/mediaViewer.form",
     					Module.ID+".admin_page_module_name");
         return map;
     }

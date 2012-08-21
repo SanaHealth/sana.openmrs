@@ -17,7 +17,7 @@
 </style>
 
 <h4>
-<spring:message code="sana.mediaviewer.viewer_Date" />: <openmrs:formatDate date="${enc.encounterDatetime}" type="small" /> <br/>
+<spring:message code="sana.mediaviewer.viewer_date" />: <openmrs:formatDate date="${enc.encounterDatetime}" type="small" /> <br/>
 <spring:message code="sana.mediaviewer.viewer_patient" />: ${enc.patient.familyName}, ${enc.patient.givenName}</a> <br/>
 <spring:message code="sana.mediaviewer.viewer_id" />: ${enc.patient.patientIdentifier}<br/>
 <spring:message code="sana.mediaviewer.viewer_age" />: ${enc.patient.age} ${enc.patient.gender}<br/>
@@ -31,7 +31,7 @@
 			id="TestViewer" width="100%" height="100%"
 			codebase="http://fpdownload.macromedia.com/get/flashplayer/current/swflash.cab">
 			<param name="movie"
-				value="${pageContext.request.contextPath}/moduleResources/sana/mediaviewer/MediaFileViewer.swf" />
+				value="${pageContext.request.contextPath}/moduleResources/sana/MediaFileViewer.swf" />
 			<param name="quality" value="high" />
 			<param name="bgcolor" value="#869ca7" />
 			<param name="allowScriptAccess" value="always" />
@@ -39,7 +39,7 @@
 			<param name="FlashVars"
 				value="patientFirstName=${enc.patient.givenName}&patientLastName=${enc.patient.familyName}&dateUploaded=${enc.encounterDatetime}&encounterID=${enc.encounterId}&contextPath=${pageContext.request.contextPath}&patientId=${enc.patient.patientId}">
 			<embed
-				src="${pageContext.request.contextPath}/moduleResources/sana/mediaviewer/MediaFileViewer.swf"
+				src="${pageContext.request.contextPath}/moduleResources/sana/MediaFileViewer.swf"
 				quality="high" bgcolor="#869ca7" width="100%" height="100%"
 				name="TestViewer" align="middle" play="true" loop="false"
 				quality="high" allowScriptAccess="always" allowFullScreen="true"
