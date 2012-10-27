@@ -1,4 +1,4 @@
-package org.openmrs.module.sana.queue.web.resource;
+package org.openmrs.module.sana.queue.web.resource.v1;
 
 
 import java.io.PrintWriter;
@@ -55,14 +55,6 @@ public class QueueItemResource extends DataDelegatingCrudResource<QueueItem>{
 	
 	/** Logger for this class and subclasses */
 	protected final Log log = LogFactory.getLog(getClass());
-	
-	/** Success form view name */
-	private final String HTML_SUCCESS_VIEW = "/module/sana/queue/queue";
-	private final String JSON_SUCCESS_VIEW = "/module/sana/queue/jsonformat";
-	private final String XML_SUCCESS_VIEW = "/module/sana/queue/xmlformat";
-	
-	
-	
     public int totalhits = 0;
 
 	/**

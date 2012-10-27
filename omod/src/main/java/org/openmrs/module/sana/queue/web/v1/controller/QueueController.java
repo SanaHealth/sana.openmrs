@@ -1,4 +1,4 @@
-package org.openmrs.module.sana.queue.web.controller;
+package org.openmrs.module.sana.queue.web.v1.controller;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -34,7 +34,7 @@ import org.openmrs.module.sana.ModuleConstants;
 import org.openmrs.module.sana.ModuleConstants.Module;
 import org.openmrs.module.sana.ModuleConstants.Property;
 import org.openmrs.module.sana.queue.*;
-import org.openmrs.module.sana.queue.web.resource.QueueItemResource;
+import org.openmrs.module.sana.queue.web.resource.v1.QueueItemResource;
 import org.openmrs.module.webservices.rest.web.annotation.Resource;
 import org.openmrs.module.webservices.rest.web.api.RestService;
 import org.openmrs.obs.ComplexData;
@@ -52,7 +52,7 @@ import org.springframework.web.servlet.mvc.ParameterizableViewController;
  *
  */
 @Controller
-@RequestMapping(value = "/module/"+Module.ID+"/queue/")
+@RequestMapping(value = "/module/"+Module.ID+"/queue/v1/")
 public class QueueController {
 
 	
@@ -60,9 +60,9 @@ public class QueueController {
 	protected final Log log = LogFactory.getLog(getClass());
 	
 	/** Success form view name */
-	private final String HTML_SUCCESS_VIEW = "/module/sana/queue/queue";
-	private final String JSON_SUCCESS_VIEW = "/module/sana/queue/jsonformat";
-	private final String XML_SUCCESS_VIEW = "/module/sana/queue/xmlformat";
+	private final String HTML_SUCCESS_VIEW = "/module/sana/queue/v1/queue";
+	private final String JSON_SUCCESS_VIEW = "/module/sana/queue/v1/jsonformat";
+	private final String XML_SUCCESS_VIEW = "/module/sana/queue/v1/xmlformat";
 	
     public int totalhits = 0;
 
@@ -122,13 +122,11 @@ public class QueueController {
 	public static final String PAGE = "start";
     
 	public ModelAndView onRequestInternal(HttpServletRequest request,
-			HttpServletResponse response, QueueItemStatus status) {
-		System.out.println("totalhits:" + (++totalhits));
-		HttpSession httpsession = request.getSession();
+			HttpServletResponse response, QueueItemStatus status) 
+	{
 		// System.out.println("checkDate:"+request.getParameter("comboDate"));
 		int defcount = Integer.parseInt(Context.getAdministrationService()
 				.getGlobalProperty(Property.DISPLAY_COUNT));
-		String formpage = ModuleConstants.FORM_PATH + "queue";
 
 		// ------------------------------------------------------------
 		// Set max queue size and sort order Lifo or fifo
@@ -181,10 +179,7 @@ public class QueueController {
 		{
 			this.handleArchiveRequest(request, response);
 		}
-
-		User strUserName = Context.getAuthenticatedUser();
-		// ------------------------------------------------------------------------------------------------
-		// System.out.println("## in else :");
+		
 		String strprocedure = getParameter(request, "proname");
 		String checkPro = getParameter(request, "comboPro");
 		String checkDate = getParameter(request, "comboDate");
@@ -238,7 +233,7 @@ public class QueueController {
 					sortvalue);
 			break;
 		}
-		Map map = new HashMap();
+		Map<String,Object> map = new HashMap<String,Object>();
 		int pageno = 1;
 		if (startvalue > 0 && startvalue < endvalue)
 			pageno = 2;
@@ -254,12 +249,10 @@ public class QueueController {
 			// System.out.println("In While"+totalrows);
 			count++;
 		}
-		// System.out.println("Total pages:"+count);
+		
 		List<QueueItem> procedurelist = resource.all();
 		List<DateItems> dateitems = resource.dateItems();
-		// System.out.println("on else : ");
-		// String strArchieve =request.getParameter("optionarchive");
-		// System.out.println("On Else strarchive: " + strArchieve);
+		
 		map.put(OBJECTS, items);
 		map.put(PROCEDURES, procedurelist);
 		map.put(DATES, dateitems);
@@ -269,7 +262,7 @@ public class QueueController {
 		map.put(PAGE, pageno);
 
 		request.setAttribute("proname", "SHOW ALL");
-		log.info("Returning " + items.size() + "axx deferred queue items");
+		log.debug("Returning " + items.size() + "axx deferred queue items");
 
 		if (request.getParameter(FORMAT) == null
 				|| request.getParameter(FORMAT).equalsIgnoreCase("htmlformat")) {
@@ -279,17 +272,15 @@ public class QueueController {
 		} else
 
 		if (request.getParameter(FORMAT).equalsIgnoreCase("Jsonformat")) {
-			QueueItemJson qij = new QueueItemJson();
-			sbr = qij.encode(items);
-			Map map1 = new HashMap();
+			sbr = QueueItemJson.encode(items);
+			Map<String,Object> map1 = new HashMap<String,Object>();
 			map1.put("sbr", sbr.toString());
 			return new ModelAndView(JSON_SUCCESS_VIEW, "sbr", map1);
 		}
 
 		else if (request.getParameter(FORMAT).equalsIgnoreCase("Xmlformat")) {
-			QueueItemXml qix = new QueueItemXml();
 
-			sbr = qix.encode(items);
+			sbr = QueueItemXml.encode(items);
 			PatientResource pr = new PatientResource();
 			try {
 
@@ -299,12 +290,12 @@ public class QueueController {
 				e.printStackTrace();
 			}
 
-			Map map1 = new HashMap();
+			Map<String,Object> map1 = new HashMap<String,Object>();
 
 			map1.put("sbr", sbr);
 			return new ModelAndView(XML_SUCCESS_VIEW, "sbr", map1);
 		}
-		System.gc();
+		//System.gc();
 		return null;
 
 	}
