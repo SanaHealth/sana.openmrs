@@ -9,6 +9,7 @@ import org.openmrs.annotation.Handler;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.handler.SaveHandler;
 import org.openmrs.module.sana.queue.QueueItem;
+import org.springframework.stereotype.Component;
 
 /**
  * Pre-interceptor for cascading saves to the encounter.
@@ -16,6 +17,7 @@ import org.openmrs.module.sana.queue.QueueItem;
  * @author Sana Development
  *
  */
+@Component
 @Handler(supports = QueueItem.class)
 public class QueueItemSaveHandler implements SaveHandler<QueueItem>{
 
@@ -23,11 +25,8 @@ public class QueueItemSaveHandler implements SaveHandler<QueueItem>{
 
 	public void handle(QueueItem object, User creator, Date dateCreated,
 			String other) {
-		try{
+			log.debug("Saving queue item.");
 			Context.getEncounterService().saveEncounter(object.getEncounter());
-		} catch (Exception e){
-			log.error("Unable to save encounter", e);
-		}
 	}
 
 }

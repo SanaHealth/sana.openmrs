@@ -71,7 +71,7 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     }
     
     private Criteria allQueueItems() {
-    	//System.out.println("on allQueueItems");
+    	//log.debug("on allQueueItems");
         return sessionFactory.getCurrentSession().createCriteria(
         		QueueItem.class);
     }
@@ -91,7 +91,7 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
 
     @SuppressWarnings("unchecked")
     public List<QueueItem> getVisibleQueueItemsInOrder() throws DAOException {
-    	//System.out.println("on getVisibleQueueItemsinOrder");
+    	//log.debug("on getVisibleQueueItemsinOrder");
         Criteria queueItems = allQueueItems().add(Expression.or(
         		Expression.eq("statusId", QueueItemStatus.NEW.ordinal()), 
         		Expression.eq("statusId", QueueItemStatus.IN_PROGRESS.ordinal())
@@ -167,7 +167,7 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     		
     	}
     	//List<QueueItem> liscount = queueItems.list();
-    	//System.out.println("total count:"+liscount.size());
+    	//log.debug("total count:"+liscount.size());
     	if(sortvalue == 1)
     	{
     		queueItems.addOrder(Order.asc("dateCreated"));
@@ -193,7 +193,7 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     	//if(checkpro !=null)
     	//returns a Queueitem list of rows based on criteria. 
     	String strProcedure = "%"+strpro+"%";
-    	//System.out.println("getting Days:"+days);
+    	//log.debug("getting Days:"+days);
     	
     	//adding a criteria based on  StatuID with NEW and INPROGRESS fields.
     	Criteria queueItems = allQueueItems().add(Expression.or(
@@ -202,11 +202,11 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     			));
     	
     	/*if(checkpro !=null && !checkpro.equalsIgnoreCase("SHOW ALL") ){  
-    		//System.out.println(" NOT EQ SHOW ALL"+strProcedure);
+    		//log.debug(" NOT EQ SHOW ALL"+strProcedure);
     		Criterion procedure= Restrictions.like("procedureTitle",strProcedure);//retriving  rows with only selected Procedure string.  
     		queueItems.add(procedure);*/
     	if(strpro !=null && !strpro.equalsIgnoreCase("SHOW ALL") ){  
-    		//System.out.println(" NOT EQ SHOW ALL"+strProcedure);
+    		//log.debug(" NOT EQ SHOW ALL"+strProcedure);
     		Criterion procedure= Restrictions.like("procedureTitle",
     				strProcedure);//retriving  rows with only selected Procedure string.  
     		queueItems.add(procedure);
@@ -216,15 +216,15 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     	{
     		//Calender startDate=Calender.getInstance();
     		//Date date=Calender.DATE
-    		//System.out.println("IN CHECKDATE NOT SHOW ALL"+ checkdate);
+    		//log.debug("IN CHECKDATE NOT SHOW ALL"+ checkdate);
     		Calendar current=Calendar.getInstance();
             current.get(Calendar.DATE);
             
             Calendar fromDate=Calendar.getInstance();            
             fromDate.add(Calendar.DATE, -days);
-            //System.out.println("DATE VALUE CHECK"+ days);
+            //log.debug("DATE VALUE CHECK"+ days);
             
-            //System.out.println("from and current Dates:"+fromDate.getTime()+":"+current.getTime());
+            //log.debug("from and current Dates:"+fromDate.getTime()+":"+current.getTime());
     		
             Criterion dateCriterion= Restrictions.between("dateCreated",
             		fromDate.getTime(),current.getTime());//adding another criteria based on Date specified, with from and to Date specification.
@@ -232,26 +232,26 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
             
     	}
     	
-    	//System.out.println("Checking for Archieve Status");
+    	//log.debug("Checking for Archieve Status");
     	if(iArchieveStatus==1)
     	{
-    		//System.out.println("Archieve Status is 1");
+    		//log.debug("Archieve Status is 1");
     		queueItems.add(Expression.eq("archived",0));//retreving only unarchived rows.
     	}
     	else if(iArchieveStatus==2)
     	{
-    		//System.out.println("Archieve Status is 0");
+    		//log.debug("Archieve Status is 0");
     		queueItems.add(Expression.eq("archived",1));//retreving only archived rows based of "archived" column being '1'
     	}
     	else if(iArchieveStatus == 3)
     	{
-    		//System.out.println("Archieve Status is 3");
+    		//log.debug("Archieve Status is 3");
     		queueItems.add(Expression.eq("archived",0));
     		
     		Calendar fromDate=Calendar.getInstance();            
             fromDate.add(Calendar.DATE, -days);
             
-            //System.out.println("in ProDate Rows | Days beyond : " + fromDate.getTime() );
+            //log.debug("in ProDate Rows | Days beyond : " + fromDate.getTime() );
             
     		Criterion dateCriterion = Restrictions.le("dateCreated",fromDate.getTime());
             queueItems.add(dateCriterion);
@@ -259,7 +259,7 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     	}
     		
     	List<QueueItem> liscount = queueItems.list();
-    	//System.out.println("Total Count:"+liscount.size());
+    	//log.debug("Total Count:"+liscount.size());
     	return liscount.size();
     }
     
@@ -274,7 +274,7 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     	//if(checkpro !=null)
     	//returns a Queueitem list of rows based on criteria. 
     	String strProcedure = "%"+strpro+"%";
-    	//System.out.println("getting Days:"+days);
+    	//log.debug("getting Days:"+days);
     	
     	//adding a criteria based on  StatuID with NEW and INPROGRESS fields.
     	Criteria queueItems = allQueueItems().add(Expression.or(
@@ -283,11 +283,11 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     			));
     	
     	/*if(checkpro !=null && !checkpro.equalsIgnoreCase("SHOW ALL") ){  
-    		//System.out.println(" NOT EQ SHOW ALL"+strProcedure);
+    		//log.debug(" NOT EQ SHOW ALL"+strProcedure);
     		Criterion procedure= Restrictions.like("procedureTitle",strProcedure);//retriving  rows with only selected Procedure string.  
     		queueItems.add(procedure);*/
     	if(strpro !=null && !strpro.equalsIgnoreCase("SHOW ALL") ){  
-    		//System.out.println(" NOT EQ SHOW ALL"+strProcedure);
+    		//log.debug(" NOT EQ SHOW ALL"+strProcedure);
     		Criterion procedure= Restrictions.like("procedureTitle",
     				strProcedure);//retriving  rows with only selected Procedure string.  
     		queueItems.add(procedure);
@@ -297,15 +297,15 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     	{
     		//Calender startDate=Calender.getInstance();
     		//Date date=Calender.DATE
-    		//System.out.println("IN CHECKDATE NOT SHOW ALL"+ checkdate);
+    		//log.debug("IN CHECKDATE NOT SHOW ALL"+ checkdate);
     		Calendar current=Calendar.getInstance();
             current.get(Calendar.DATE);
             
             Calendar fromDate=Calendar.getInstance();            
             fromDate.add(Calendar.DATE, -days);
-            //System.out.println("DATE VALUE CHECK"+ days);
+            //log.debug("DATE VALUE CHECK"+ days);
             
-            //System.out.println("from and current Dates:"+fromDate.getTime()+":"+current.getTime());
+            //log.debug("from and current Dates:"+fromDate.getTime()+":"+current.getTime());
     		
             Criterion dateCriterion= Restrictions.between("dateCreated",
             		fromDate.getTime(),current.getTime());//adding another criteria based on Date specified, with from and to Date specification.
@@ -313,26 +313,26 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
             
     	}
     	
-    	//System.out.println("Checking for Archieve Status");
+    	//log.debug("Checking for Archieve Status");
     	if(iArchieveStatus==1)
     	{
-    		//System.out.println("Archieve Status is 1");
+    		//log.debug("Archieve Status is 1");
     		queueItems.add(Expression.eq("archived",0));//retreving only unarchived rows.
     	}
     	else if(iArchieveStatus==2)
     	{
-    		//System.out.println("Archieve Status is 0");
+    		//log.debug("Archieve Status is 0");
     		queueItems.add(Expression.eq("archived",1));//retreving only archived rows based of "archived" column being '1'
     	}
     	else if(iArchieveStatus == 3)
     	{
-    		//System.out.println("Archieve Status is 3");
+    		//log.debug("Archieve Status is 3");
     		queueItems.add(Expression.eq("archived",0));
     		
     		Calendar fromDate=Calendar.getInstance();            
             fromDate.add(Calendar.DATE, -days);
             
-            //System.out.println("in ProDate Rows | Days beyond : " + fromDate.getTime() );
+            //log.debug("in ProDate Rows | Days beyond : " + fromDate.getTime() );
             
     		Criterion dateCriterion = Restrictions.le("dateCreated",fromDate.getTime());
             queueItems.add(dateCriterion);
@@ -340,7 +340,7 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     	}
     		
     	List<QueueItem> liscount = queueItems.list();
-    	System.out.println("Total Count:"+liscount.size());
+    	log.debug("Total Count:"+liscount.size());
     	return liscount.size();
     }
     
@@ -356,7 +356,7 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     	//if(checkpro !=null)
     	//returns a Queueitem list of rows based on criteria. 
     	String strProcedure = "%"+strpro+"%";
-    	//System.out.println("getting Days:"+days);
+    	//log.debug("getting Days:"+days);
     	
     	//adding a criteria based on  StatuID with NEW and INPROGRESS fields.
     	Criteria queueItems = allQueueItems().add(Expression.or(
@@ -365,11 +365,11 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     			));
     	
     	/*if(checkpro !=null && !checkpro.equalsIgnoreCase("SHOW ALL") ){  
-    		//System.out.println(" NOT EQ SHOW ALL"+strProcedure);
+    		//log.debug(" NOT EQ SHOW ALL"+strProcedure);
     		Criterion procedure= Restrictions.like("procedureTitle",strProcedure);//retriving  rows with only selected Procedure string.  
     		queueItems.add(procedure);*/
     	if(strpro !=null && !strpro.equalsIgnoreCase("SHOW ALL") ){  
-    		//System.out.println(" NOT EQ SHOW ALL"+strProcedure);
+    		//log.debug(" NOT EQ SHOW ALL"+strProcedure);
     		Criterion procedure= Restrictions.like("procedureTitle",
     				strProcedure);//retriving  rows with only selected Procedure string.  
     		queueItems.add(procedure);
@@ -379,15 +379,15 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     	{
     		//Calender startDate=Calender.getInstance();
     		//Date date=Calender.DATE
-    		//System.out.println("IN CHECKDATE NOT SHOW ALL"+ checkdate);
+    		//log.debug("IN CHECKDATE NOT SHOW ALL"+ checkdate);
     		Calendar current=Calendar.getInstance();
             current.get(Calendar.DATE);
             
             Calendar fromDate=Calendar.getInstance();            
             fromDate.add(Calendar.DATE, -days);
-            //System.out.println("DATE VALUE CHECK"+ days);
+            //log.debug("DATE VALUE CHECK"+ days);
             
-            //System.out.println("from and current Dates:"+fromDate.getTime()+":"+current.getTime());
+            //log.debug("from and current Dates:"+fromDate.getTime()+":"+current.getTime());
     		
             Criterion dateCriterion= Restrictions.between("dateCreated",
             		fromDate.getTime(),current.getTime());//adding another criteria based on Date specified, with from and to Date specification.
@@ -395,26 +395,26 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
             
     	}
     	
-    	//System.out.println("Checking for Archieve Status");
+    	//log.debug("Checking for Archieve Status");
     	if(iArchieveStatus==1)
     	{
-    		//System.out.println("Archieve Status is 1");
+    		//log.debug("Archieve Status is 1");
     		queueItems.add(Expression.eq("archived",0));//retreving only unarchived rows.
     	}
     	else if(iArchieveStatus==2)
     	{
-    		//System.out.println("Archieve Status is 0");
+    		//log.debug("Archieve Status is 0");
     		queueItems.add(Expression.eq("archived",1));//retreving only archived rows based of "archived" column being '1'
     	}
     	else if(iArchieveStatus == 3)
     	{
-    		//System.out.println("Archieve Status is 3");
+    		//log.debug("Archieve Status is 3");
     		queueItems.add(Expression.eq("archived",0));
     		
     		Calendar fromDate=Calendar.getInstance();            
             fromDate.add(Calendar.DATE, -days);
             
-            //System.out.println("in ProDate Rows | Days beyond : " + fromDate.getTime() );
+            //log.debug("in ProDate Rows | Days beyond : " + fromDate.getTime() );
             
     		Criterion dateCriterion = Restrictions.le("dateCreated",
     				fromDate.getTime());
@@ -423,7 +423,7 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     	}
     		
     	List<QueueItem> liscount = queueItems.list();
-    	System.out.println("Total Count:"+liscount.size());
+    	log.debug("Total Count:"+liscount.size());
     	return liscount.size();
     }
     
@@ -462,26 +462,26 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
             
     	}
     	
-    	//System.out.println("Checking closed for Archieve Status");
+    	//log.debug("Checking closed for Archieve Status");
     	if(iArchieveStatus==1)
     	{
-    		//System.out.println("Archieve Status is 1");
+    		//log.debug("Archieve Status is 1");
     		queueItems.add(Expression.eq("archived",0));
     	}
     	else if(iArchieveStatus==2)
     	{
-    		//System.out.println("Archieve Status is 0");
+    		//log.debug("Archieve Status is 0");
     		queueItems.add(Expression.eq("archived",1));
     	}
     	else if(iArchieveStatus == 3)
     	{
-    		//System.out.println("Archieve Status is 3");
+    		//log.debug("Archieve Status is 3");
     		queueItems.add(Expression.eq("archived",0));
     		
     		Calendar fromDate=Calendar.getInstance();            
             fromDate.add(Calendar.DATE, -days);
             
-            //System.out.println("in ProDate Rows | Days beyond : " + fromDate.getTime() );
+            //log.debug("in ProDate Rows | Days beyond : " + fromDate.getTime() );
             
     		Criterion dateCriterion = Restrictions.le("dateCreated",
     				fromDate.getTime());
@@ -495,30 +495,30 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     	
        /*queueItems = defaultSort(queueItems);
        return queueItems.list();*/
-    	System.out.println("##sort value in DAO:"+sortvalue);
+    	log.debug("##sort value in DAO:"+sortvalue);
     	if(sortvalue == 1)
     	{
-    		System.out.println("ascending");
+    		log.debug("ascending");
     	queueItems.addOrder(Order.asc("dateCreated"));
     	}
     	else
     	{	
-    		System.out.println("descending");
+    		log.debug("descending");
     		queueItems.addOrder(Order.desc("dateCreated"));
     	}	
-    	System.out.println("In DAO :"+ startvalue+":"+endvalue);
+    	log.debug("In DAO :"+ startvalue+":"+endvalue);
     	/*if(startvalue == 1)
     	{
     		startvalue--;
-    		System.out.println("start-----");
+    		log.debug("start-----");
     	}*/
-        System.out.println(startvalue);
+        log.debug(startvalue);
     	queueItems.setFirstResult(startvalue);
     	queueItems.setMaxResults(endvalue);
     	
-    	//System.out.println("## Size of QueueItem :"+queueItems.list().size());
+    	//log.debug("## Size of QueueItem :"+queueItems.list().size());
         List<QueueItem> lis = queueItems.list();//excuting criteria and returning a list of rows(Queueitems).
-        System.out.println("size of queue:"+lis.size());	
+        log.debug("size of queue:"+lis.size());	
         return lis;
     		
     }
@@ -553,56 +553,56 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
             queueItems.add(dateCriterion);
             
     	}
-    	//System.out.println("Checking Deferred for Archieve Status");
+    	//log.debug("Checking Deferred for Archieve Status");
     	if(iArchieveStatus==1)
     	{
-    		//System.out.println("Archieve Status is 1");
+    		//log.debug("Archieve Status is 1");
     		queueItems.add(Expression.eq("archived",0));
     	}
     	else if(iArchieveStatus==2)
     	{
-    		//System.out.println("Archieve Status is 0");
+    		//log.debug("Archieve Status is 0");
     		queueItems.add(Expression.eq("archived",1));
     	}
     	else if(iArchieveStatus == 3)
     	{
-    		//System.out.println("Archieve Status is 3");
+    		//log.debug("Archieve Status is 3");
     		queueItems.add(Expression.eq("archived",0));
 
     		Calendar fromDate=Calendar.getInstance();            
             fromDate.add(Calendar.DATE, -days);
             
-            //System.out.println("in ProDate Rows | Days beyond : " + fromDate.getTime() );
+            //log.debug("in ProDate Rows | Days beyond : " + fromDate.getTime() );
             
     		Criterion dateCriterion = Restrictions.le("dateCreated",
     				fromDate.getTime());
             queueItems.add(dateCriterion);
     	}
     
-    	System.out.println("##sort value in DAO:"+sortvalue);
+    	log.debug("##sort value in DAO:"+sortvalue);
     	if(sortvalue == 1)
     	{
-    		System.out.println("ascending");
+    		log.debug("ascending");
     	queueItems.addOrder(Order.asc("dateCreated"));
     	}
     	else
     	{	
-    		System.out.println("descending");
+    		log.debug("descending");
     		queueItems.addOrder(Order.desc("dateCreated"));
     	}	
-    	System.out.println("In DAO :"+ startvalue+":"+endvalue);
+    	log.debug("In DAO :"+ startvalue+":"+endvalue);
     	/*if(startvalue == 1)
     	{
     		startvalue--;
-    		System.out.println("start-----");
+    		log.debug("start-----");
     	}*/
-        System.out.println(startvalue);
+        log.debug(startvalue);
     	queueItems.setFirstResult(startvalue);
     	queueItems.setMaxResults(endvalue);
     	
-    	//System.out.println("## Size of QueueItem :"+queueItems.list().size());
+    	//log.debug("## Size of QueueItem :"+queueItems.list().size());
         List<QueueItem> lis = queueItems.list();//excuting criteria and returning a list of rows(Queueitems).
-        System.out.println("size of queue:"+lis.size());	
+        log.debug("size of queue:"+lis.size());	
         return lis;
     }
     public List getProcedureAllRows(){
@@ -662,7 +662,7 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     public void getUnArchivedRows(int arr[])
     {
     	//Setting the selected rows with '0' for column Archived.
-    	//System.out.println("unarchived row | HibernateDao");
+    	//log.debug("unarchived row | HibernateDao");
 		Session ses=this.sessionFactory.getCurrentSession();
 		User strUserName = Context.getAuthenticatedUser();
     	for(int i=0; i<arr.length;i++)
@@ -672,7 +672,7 @@ public class HibernateQueueItemDAO implements QueueItemDAO {
     		qry.setParameter("arch",1);
     		qry.setParameter("archUser",strUserName.getUsername());
     		//qry.setParameter("arhby",Context.getAuthenticatedUser());
-    		//System.out.println("Query = update QueueItem set archived=0 where id="+arr[i]);
+    		//log.debug("Query = update QueueItem set archived=0 where id="+arr[i]);
     		int j=qry.executeUpdate();
     	}
     }

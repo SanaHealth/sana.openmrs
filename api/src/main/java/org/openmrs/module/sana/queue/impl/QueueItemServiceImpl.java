@@ -46,15 +46,20 @@ public class QueueItemServiceImpl extends BaseOpenmrsService implements
     }
     
     public QueueItem saveQueueItem(QueueItem queueItem){
+    	log.debug("saveQueueItem(). Entering");
     	boolean isNew = false;
 		Date newDate = queueItem.getEncounter().getEncounterDatetime();
+    	log.debug("Encounter date: " + newDate);
 		Date originalDate = null;
     	
-    	// check permissions
     	if (queueItem.getQueueItemId() == null) {
 			isNew = true;
+	    	log.debug("Got a  new queue item");
 		}
+    	
+    	// Not new we update some of the Encounter info
     	if (!isNew) {
+    		log.info("Updating previously queued encounter!");
     		Encounter encounter = queueItem.getEncounter();
     		Patient p = encounter.getPatient();
     		originalDate = encounter.getEncounterDatetime();
@@ -94,6 +99,7 @@ public class QueueItemServiceImpl extends BaseOpenmrsService implements
 				
 			}
     	}
+    	log.debug("Saving queu item.");
     	dao.saveQueueItem(queueItem);
     	return queueItem;
     }
