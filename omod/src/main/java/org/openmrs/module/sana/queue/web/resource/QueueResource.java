@@ -2,6 +2,7 @@ package org.openmrs.module.sana.queue.web.resource;
 
 import org.openmrs.module.sana.queue.QueueItem;
 import org.openmrs.module.sana.queue.QueueItemList;
+import org.openmrs.module.sana.queue.web.resource.v1.QueueItemResource;
 import org.openmrs.module.webservices.rest.web.RequestContext;
 import org.openmrs.module.webservices.rest.web.representation.Representation;
 import org.openmrs.module.webservices.rest.web.resource.api.PageableResult;
@@ -44,7 +45,7 @@ public class QueueResource {
 
 		QueueItemResource qr = new QueueItemResource();
 		for(QueueItem q: arg0){
-			qr.delete(q, arg1, arg2);
+			qr.purge(q, arg2);
 		}
 	}
 

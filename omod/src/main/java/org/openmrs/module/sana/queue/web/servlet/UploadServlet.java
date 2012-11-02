@@ -1,6 +1,7 @@
 package org.openmrs.module.sana.queue.web.servlet;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +36,7 @@ import org.openmrs.ConceptNameTag;
 import org.openmrs.ConceptWord;
 import org.openmrs.Encounter;
 import org.openmrs.EncounterType;
+import org.openmrs.Form;
 import org.openmrs.Location;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
@@ -42,8 +44,10 @@ import org.openmrs.PatientIdentifier;
 import org.openmrs.PatientIdentifierType;
 import org.openmrs.Person;
 import org.openmrs.Provider;
+import org.openmrs.User;
 import org.openmrs.api.APIException;
 import org.openmrs.api.ConceptService;
+import org.openmrs.api.FormService;
 import org.openmrs.api.PatientIdentifierException;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
@@ -110,7 +114,7 @@ public class UploadServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, 
     		HttpServletResponse response) throws ServletException, IOException 
     {
-        log.info("MDSUploadServlet Got post");
+        log.info("UploadServlet Got post");
         MDSMessage message;
         Patient patient = null;
         Date encounterDateTime = null;
@@ -118,16 +122,19 @@ public class UploadServlet extends HttpServlet {
         Map<String, Concept> idMap = null;
 		Set<Obs> observations = null;
 		QueueItem queueItem;
-		
+
+    	
 		// grab any files from the request
         List<FileItem> files = Collections.emptyList();
         try {
             files = getUploadedFiles(request);
         } catch(APIException ex) {
+        	log.error("Error getting Request files!", ex);
             MDSResponse.fail(request, response, ex.getMessage(), log);
             return;
         }
-        
+
+    	
         //TODO move this into a method so that we can handle the xml changes
         String jsonDescription = request.getParameter("description");
         if(jsonDescription == null) { 
@@ -145,26 +152,31 @@ public class UploadServlet extends HttpServlet {
         	}
             // If still null, fail
         	if (jsonDescription == null) {
+        		log.error("Invalid description");
         		MDSResponse.fail(request,response, 
         				"Invalid description for encounter",log);
         		return;
         	}
         }
+    	
         // Convert to MDSMessage
         try {
         	Gson gson = new Gson();
         	message = gson.fromJson(jsonDescription, MDSMessage.class);
         } catch (com.google.gson.JsonParseException ex) {
+        	log.error("doPost(). Error parsing message");
         	MDSResponse.fail(request, response, 
         			"Error parsing MDSMessage: " + ex, log);
         	return;
         }
 
+    	log.debug(message);
 		// First check if it exists
-		String uuid = request.getParameter("uuid");
+		String uuid = request.getParameter("caseIdentifier");
 		if(uuid != null)
 			queueItem = Context.getService(QueueItemService.class)
 								.getQueueItemByUuid(uuid);
+		
         try{
             patient = getPatient(message.patientId);
         	if(patient == null){
@@ -174,49 +186,55 @@ public class UploadServlet extends HttpServlet {
         	} else 
         		log.debug("Sana.UploadServlet.doPost: caseIdentifier:" 
         			+message.caseIdentifier+", has patient "+message.patientId);
-        } catch(PatientIdentifierException ex){	 
+        } catch(PatientIdentifierException ex){	
+        	log.error("Error getting patient!" + message.patientId, ex);
 			MDSResponse.fail(request, response, ex.getMessage(), log);
 			return;
        	 
 		}
-        
+
         String mid = message.caseIdentifier;
         // Only need this when debugging
-        if(log.isDebugEnabled())
-        	System.out.println("Sana.UploadServlet.doPost(): message: " + message);
+        log.debug("doPost(): message: " + message.caseIdentifier);
      
         for(MDSQuestion q : message.questions)
-        	System.out.println("Sana.UploadServlet.doPost: message("+mid+
-        			"): question:"+q);
+        	    log.debug("doPost: message("+mid+
+        		"): question:"+q);
 
         // Validate before we persist anything to the database when creating 
         // the Encounter or Observations       
         String pattern = Context.getAdministrationService()
     			.getGlobalProperty(Property.DATE_FORMAT);
-        
+
         try {
             // Check the date format
             encounterDateTime = new SimpleDateFormat(pattern).parse(message.procedureDate);
+            log.debug("Encounter date: " + encounterDateTime);
         } catch (Exception ex) {
-        	ex.printStackTrace();
+        	log.error("Date format error", ex);
         	MDSResponse.fail(request, response, 
         			"date: " + message.procedureDate, log);
             return;
         }
+
+    	
         try{
             // Validate the concepts
             idMap = makeIdToConceptMap(message);
         } catch (Exception ex) {
-        	ex.printStackTrace();
+        	log.error("Error validating concepts!", ex);
         	MDSResponse.fail(request, response, 
         			"Concept error: " + ex.getMessage(), log);
             return;
         }
-        
+
 		try{
 			// translate the response into an encounter
-			encounter = makeEncounter(patient, message, encounterDateTime, files);
+			encounter = makeEncounter(patient, encounterDateTime,
+					message.procedureTitle, Context.getAuthenticatedUser());
+			log.debug("Created encounter: "+encounter.getEncounterId());
 		} catch(Exception ex){
+        	log.error("Error Creating Encounter!", ex);
 			MDSResponse.fail(request, response, ex.getMessage(), log);
 			return;
 		}
@@ -224,24 +242,26 @@ public class UploadServlet extends HttpServlet {
 			// Create the observations
 			observations = makeObsSet(encounter, patient, message, files,
 				encounterDateTime, idMap);
-
+            log.debug("Created observations: "+ observations.size());
 		} catch(Exception ex){
+			log.error("Error generating item observation set!",ex);
 			MDSResponse.fail(request, response, ex.getMessage(), log);
 			return;
 		}
-			// This constructs the queue item and saves it
+
+    	
+		// This constructs the queue item and saves it
 		try{
 			QueueItem q = makeQueueItem(encounter, patient, message);
+			log.debug("Initialized queue item: "+ q);
 			Context.getService(QueueItemService.class).saveQueueItem(q);
-
 			MDSResponse.succeed(request, response, "Successfully uploaded "
 					+ "procedure " + message.caseIdentifier, log);
+			// close the session
+			Context.getUserContext().logout();
 		} catch (Exception ex) {
-			ex.printStackTrace();
-			StackTraceElement init = ex.getStackTrace()[0];
-			log.error("Upload Error: " + ex.toString() + ", source: "
-					+ init.toString() + ", method: " + init.getMethodName()
-					+ " at line no. : " + init.getLineNumber());
+			Context.getEncounterService().purgeEncounter(encounter, true);
+			log.error("doPost(): Error inserting item into queue!",ex);
 			MDSResponse.fail(request, response, ex.getMessage(), log);
 			return;
 		}
@@ -266,13 +286,19 @@ public class UploadServlet extends HttpServlet {
         List<Patient> patients = patientService.getPatients(null, 
         		patientIdentifier, null, false);
         
-        if(patients.size() > 0)
+        if(patients.size() > 0){
             for(Patient p : patients) {
-        	if(p.getPatientIdentifier().getIdentifier().equals(patientIdentifier))
-        		patient = p;
-        		break;
-            }
-        else throw new PatientIdentifierException("Invalid patient id: " 
+            	if(p.getPatientIdentifier().getIdentifier().equals(patientIdentifier)){
+            		patient = p;
+            		break;
+            	} 
+            } 
+        } else {
+            throw new PatientIdentifierException("No patients found with id:  " 
+        			+ patientIdentifier);
+        }
+        if (patient == null)
+        	throw new PatientIdentifierException("No patients found with id: " 
         			+ patientIdentifier);
         return patient;
     }
@@ -324,14 +350,6 @@ public class UploadServlet extends HttpServlet {
     	return files;
     }
     
-    private Patient getPatientObject(String uuid){
-    	Patient p =  Context.getPatientService().getPatientByUuid(uuid);
-    	/*
-		description.addRequiredProperty("patient");
-		*/
-    	return p;
-    }
-    
     
     private Encounter createEncounter(Patient patient, Date encounterDateTime,
     		Location location, EncounterType type, Provider provider,
@@ -352,7 +370,7 @@ public class UploadServlet extends HttpServlet {
         Encounter e = new Encounter();
         e.setPatient(patient);
         e.setEncounterDatetime(encounterDateTime);
-        e.setDateCreated(new Date());
+        //e.setDateCreated(new Date());
         e.setCreator(Context.getAuthenticatedUser());
         e.setProvider(Context.getAuthenticatedUser().getPerson());
         e.setLocation(location);
@@ -363,8 +381,10 @@ public class UploadServlet extends HttpServlet {
         		.get(0));
         Context.getEncounterService().saveEncounter(e);
         Integer encounterId = e.getId();
+        log.debug("Encounter initialized");
         Context.evictFromSession(e);
     	return Context.getEncounterService().getEncounter(encounterId);
+        //return e;
     }
     
     Map<String,List<FileItem>> parseFileObs(MDSMessage message, 
@@ -397,10 +417,11 @@ public class UploadServlet extends HttpServlet {
     }
     
     /** 
+     * @throws ParseException 
      * @deprecated
      */
     Set<Obs> makeObsSet(Encounter encounter, Patient patient, MDSMessage message, 
-    		List<FileItem> files, Date date) throws IOException
+    		List<FileItem> files, Date date) throws IOException, ParseException
     {
     	Set<Obs> observations = new HashSet<Obs>();
         Map<String,List<FileItem>> fileMap = parseFileObs(message, files);
@@ -471,22 +492,26 @@ public class UploadServlet extends HttpServlet {
      * 
      * @return
      * @throws IOException
+     * @throws ParseException 
      */
-    Set<Obs> makeObsSet(Encounter encounter, Patient patient, MDSMessage message, 
+    private Set<Obs> makeObsSet(Encounter encounter, Patient patient, MDSMessage message, 
     		List<FileItem> files, Date date, Map<String, Concept> idMap) 
-    		throws IOException
+    		throws IOException, ParseException
     {
+    	log.debug("Entering");
     	Set<Obs> observations = new HashSet<Obs>();
+    	Set<Obs> errors = new HashSet<Obs>();
         Map<String,List<FileItem>> fileMap = parseFileObs(message, files);
+        
     	// Create the observations
         for(MDSQuestion q : message.questions) {
         	Obs obs = null;
             Concept c = idMap.get(q.id);
-            boolean isComplex = c.isComplex();
             
             // 1.x versions allow multiple files per question so we need to
             // make one observation per file
-            if(isComplex) {
+            if(c.isComplex()) {
+            	log.debug("Concept is complex checking for file.");
                 // If no file was uploaded, then there is no obs to make.
                 if(fileMap.containsKey(q.id)) {
                     // Make one obs per file
@@ -502,15 +527,12 @@ public class UploadServlet extends HttpServlet {
             	obs = makeObs(encounter, patient,date,c, q, null);
             }
             if (obs != null){
-            	log.debug("Sana.UploadServlet.createObsSet():"
+            	log.debug("makeObsSet():"
         			+ "Eid: " + q.id + ", Concept: " + q.concept 
-        			+ ", Obs created. Complex = "
-        			+ ((obs.getComplexData() != null)? obs.getValueComplex(): "False"));
+        			+ ", Obs created. Complex = " + obs.isComplex());
             	observations.add(obs);
             } else
-        		log.debug("Sana.UploadServlet.createObsSet():"
-        			+ "Eid: " + q.id + ", Concept: " + q.concept 
-        			+ ", Obs not created. Complex type No File");
+        		log.warn("makeObsSet(): Null Obs for response: " + q.id);
         }
         return observations;
            
@@ -525,42 +547,86 @@ public class UploadServlet extends HttpServlet {
      * @param files Files collected as part of the procedure
      * @throws IOException 
      */
-    Encounter makeEncounter(Patient patient, MDSMessage message, Date procedureDate, 
-    	List<FileItem> files) throws IOException, PatientIdentifierException
+    private Encounter makeEncounter(Patient patient, Date procedureDate,
+    		String formName, User user) 
+    		throws IOException, PatientIdentifierException
     {
         // Now we assemble the encounter
+    	log.debug("entering makeEncounter()");
         Encounter e = new Encounter();
         e.setPatient(patient);
+        
         e.setEncounterDatetime(procedureDate);
-        e.setDateCreated(new Date());
-        e.setCreator(Context.getAuthenticatedUser());
-        e.setProvider(Context.getAuthenticatedUser().getPerson());
+        e.setDateCreated(procedureDate);
+        e.setCreator(user);
+        
         Location location = Context.getLocationService().getDefaultLocation();
         e.setLocation(location);
         
+        // TODO Check that the intial provider has CHW role or add it
+        //Provider provider = getProvider(user);
+        //e.setProvider(provider);
+        
         // TODO(XXX) Replace these, catch exceptions, etc.
-        e.setForm(Context.getFormService().getAllForms().get(0));
+        // Fetches the form from the procedureTitle field or creates a duplicate
+        // of the Basic Form
+        Form form = getForm(formName);
+        e.setForm(form);
+        
+        // TODO Set a Globabl Property for Default 
         e.setEncounterType(Context.getEncounterService().getAllEncounterTypes()
         		.get(0));
         Context.getEncounterService().saveEncounter(e);
         Integer encounterId = e.getId();
         Context.evictFromSession(e);
-    	return Context.getEncounterService().getEncounter(encounterId);
-    	//return e;
+    	log.debug("exiting makeEncounter(): Created: " + e);
+    	e = Context.getEncounterService().getEncounter(encounterId);
+    	log.debug("Refreshed encounter: " + e);
+    	return e;
     }
     
-    QueueItem makeQueueItem(Encounter e, Patient p, MDSMessage message){
+    private Provider getProvider(User user){
+    	Provider provider = null;
+    	
+    	return provider;
+    }
+    
+    /**
+     * Gets the form by title or creates a duplicate of the Basic Form
+     * @param name
+     * @return
+     */
+    private Form getForm(String name){
+    	Form form = null;
+    	FormService fs = Context.getFormService();
+    	form = fs.getForm(name);
+    	if(form == null){
+    	    log.warn("Form not found: " + name);
+    	    log.warn("Duplicating Basic Form. Update with correct version");
+    		Form basicForm = fs.getAllForms().get(0);
+    		form = fs.duplicateForm(basicForm);
+    		form.setName(name);
+    		fs.saveForm(form);
+    		log.debug("Created new form: " + form);
+    	} else
+        	log.debug("Found form: " + form.getName());
+    	return form;
+    }
+    
+    private QueueItem makeQueueItem(Encounter e, Patient p, MDSMessage message){
     	QueueItem q = new QueueItem();
     	q.setStatus(QueueItemStatus.NEW);
-        //q.setPhoneIdentifier(message.phoneId);
-        //q.setCaseIdentifier(message.caseIdentifier);
-        //q.setProcedureTitle(message.procedureTitle);
+        q.setPhoneIdentifier(message.phoneId);
+        q.setCaseIdentifier(message.caseIdentifier);
+        q.setProcedureTitle(message.procedureTitle);
         q.setCreator(Context.getAuthenticatedUser());
-        q.setDateCreated(new Date());
+        q.setDateUploaded(e.getEncounterDatetime());
         q.setChangedBy(Context.getAuthenticatedUser());
-        q.setDateChanged(new Date());
-        q.setDateCreated(new Date());
+        q.setDateChanged(e.getEncounterDatetime());
+        q.setDateCreated(e.getEncounterDatetime());
+        q.setPatient(p);
         q.setEncounter(e);
+        log.debug(q);
         return q;
     }
     
@@ -586,15 +652,28 @@ public class UploadServlet extends HttpServlet {
     {    
         ConceptService cs = Context.getConceptService();
         Concept c = null;
-		// Search for a concept named conceptName
-
+		// Search for a concept name precisely 
+        c = cs.getConcept(name);
+        if (c != null){
+        	log.debug("Found exact match!");
+        	return c;
+        }
+        // Start requiring exact match
+        log.debug("No exact match found:" + name);
 		// Get concepts matching these words in this locale
         Locale defaultLocale = Context.getLocale();
 		List<ConceptWord> conceptWords = new Vector<ConceptWord>();
 		conceptWords.addAll(cs.getConceptWords(name, defaultLocale));
 		log.debug("Found Concept words with matching name:" 
-					+ conceptWords.toString());
-		// Use the description field to uniquely match 
+					+ conceptWords.size());
+		if (conceptWords.size() > 1)
+			log.warn("Multiple concepts with the same name!" + name);
+		
+		
+		//TODO Remove this?
+		// As of OpenMRS > 1.7, duplicate concept names were not allowed
+		// so this can probably be removed.
+		// Use the description field to uniquely match
 		for(ConceptWord cw : conceptWords){
 			try {
 				log.debug("Sana.UploadServlet.getOrCreateConcept():Testing: (" 
@@ -628,6 +707,7 @@ public class UploadServlet extends HttpServlet {
 				Context.getAdministrationService().getGlobalProperty(
 							ModuleConstants.PROP_ALLOW_CONCEPT_CREATE));
 			if(allowCreate){
+				log.debug("Trying to create Concept...Bad");
 				c = createAndGetConcept(name, type, question);
 			} else
 				throw new NullPointerException(msg);
@@ -692,42 +772,51 @@ public class UploadServlet extends HttpServlet {
      * @param f a file item associated with the observation
      * @return A new Obs 
      * @throws IOException
+     * @throws ParseException 
      */
     private Obs makeObs(Encounter encounter, Patient p, Date date, Concept c, MDSQuestion q, 
-    		FileItem f) throws IOException 
+    		FileItem f) throws IOException, ParseException 
     {
-        System.out.println("Sana.UploadServlet.makeObs(): q=" +
-        		q.toString());
-
-        System.out.println("Sana.UploadServlet.makeObs(): p=" +
-        		p.printAttributes());
-
-        System.out.println("Sana.UploadServlet.makeObs(): c=" +
-        		c.getUuid() + "::" + c.getDisplayString());
+        log.debug("data=" + q.toString());
+        log.debug("patient=" + p);
+        log.debug("concept=" + c.getUuid() + "::" + c.getDisplayString());
+        log.debug("date=" + date);
+        
         Obs o = new Obs(p, c, date,
         			Context.getLocationService().getDefaultLocation());
         o.setCreator(Context.getAuthenticatedUser());
         o.setEncounter(encounter);
-        if(f == null)
-        	o.setValueText(q.answer);
-        else
-        	o.setValueText(q.type);
+		log.debug("Setting Obs value text: " + q.answer);
+		if (q.answer == null || q.answer.isEmpty()){
+			log.error("Got an empty answer! ");
+			throw new NullPointerException("Null answer: " + q.id);
+		}
+		
+        if(!c.isComplex()){
+    		o.setValueAsString(q.answer);
+    		log.debug("Set Obs value text: " + o.getValueAsString(Context.getLocale()));
         
-        if(f != null) {
-        	log.debug("Sana.UploadServlet.makeObs(): file:" + f.getName());
-            ComplexData cd = new ComplexData(f.getName(), f.getInputStream());
-            o.setComplexData(cd);
+        } else {
+        	if (f != null) {
+        		log.debug("file:" + f.getName());
+        		ComplexData cd = new ComplexData(f.getName(), f.getInputStream());
+        		o.setComplexData(cd);
+        	} else {
+        		log.warn("Empty file! " + q.id);
+    			throw new NullPointerException("Null file for answer! " + q.id);
+        	}
         }
-        System.out.println("Sana.UploadServlet.makeObs(): " +
-        		o.getUuid() +"::"+o.toString());
+        log.debug("Preparing to saveObs()");
         Context.getObsService().saveObs(o, "");
+        log.debug("Obs saved! " + o);
+        //TODO We don't seem to need this block in the newer versions.
         //Integer id = o.getObsId();
         //Context.evictFromSession(o);
-        //return Context.getObsService().getObs(id);
+        //o = Context.getObsService().getObs(id);
         return o;
     }
     
-    protected Concept createAndGetConcept(String name, String type, String question)
+    private Concept createAndGetConcept(String name, String type, String question)
     {
     	Concept c = null;
         // TODO make this constant / static somewhere

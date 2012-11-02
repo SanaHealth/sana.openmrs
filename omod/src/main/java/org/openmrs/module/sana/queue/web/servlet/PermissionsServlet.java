@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.api.context.Context;
+import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.module.sana.ModuleConstants;
 import org.openmrs.module.sana.ModuleConstants.Privilege;
 import org.openmrs.module.sana.api.MDSResponse;
@@ -93,21 +94,55 @@ public class PermissionsServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, 
     		HttpServletResponse response) throws ServletException, IOException 
-    {    
-    	User currentUser = Context.getAuthenticatedUser();
-    	String managePrivilege = Privilege.MANAGE_QUEUE;
+    {   
+    	try{
+    		User currentUser = Context.getAuthenticatedUser();
+    		String managePrivilege = Privilege.MANAGE_QUEUE;
     	
-    	if(currentUser.hasPrivilege(managePrivilege)){
-    		log.info("User " + currentUser.getGivenName() + " " 
+    		if(currentUser.hasPrivilege(managePrivilege)){
+    			log.info("User " + currentUser.getGivenName() + " " 
     				+ currentUser.getFamilyName() + "does have privilege");
-    		succeed(request, response, "User has Manage Sana Queue privileges");
+    			succeed(request, response, "User has Manage Sana Queue privileges");
+    		} else{
+    			log.info("User does NOT have privilege");
+    		    fail(request, response, "User does NOT have privilege");
+    		}
+    	} catch(Exception e){
+    		log.error("doGet(): " + e.toString());
+    		fail(request, response, e.toString());
     	}
-    	else{
-    		log.info("User " + currentUser.getGivenName() + " " 
-    				+ currentUser.getFamilyName() + "does NOT have privilege");
-    		fail(request, response, "User " + currentUser.getGivenName() + " " 
-    				+ currentUser.getFamilyName() 
+    }
+    
+    @Override
+    protected void doPost(HttpServletRequest request, 
+    		HttpServletResponse response) throws ServletException, IOException 
+    {  
+    	String username = null;
+    	String password = null;
+    	try{
+        	username = request.getParameter("username");
+        	password = request.getParameter("password");
+    		Context.authenticate(username, password);
+    		User user = Context.getAuthenticatedUser();
+    		//Context.becomeUser(user.getSystemId());
+    		//Context.isAuthenticated();
+    		String managePrivilege = Privilege.MANAGE_QUEUE;
+    	
+    		if(user.hasPrivilege(managePrivilege)){
+    			log.info("User " + user.getGivenName() + " " 
+    				+ user.getFamilyName() + "does have privilege");
+    			succeed(request, response, "User has Manage Sana Queue privileges");
+    		} else{
+    			log.info("User " + user.getGivenName() + " " 
+    				+ user.getFamilyName() + "does NOT have privilege");
+    			fail(request, response, "User " + user.getGivenName() + " " 
+    				+ user.getFamilyName() 
     				+ "does not have Manage Sana Queue Privileges");
+    		}
+    	} catch (ContextAuthenticationException e){
+    		log.error("Authentication Failure. username: " + username);
+    	} catch (Exception e){
+    		log.error("Authentication Failure. error: " + e.toString());
     	}
     }
 }

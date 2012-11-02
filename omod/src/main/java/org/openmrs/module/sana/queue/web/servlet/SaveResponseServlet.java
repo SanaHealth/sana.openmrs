@@ -187,7 +187,7 @@ public class SaveResponseServlet extends HttpServlet {
     		doctorUrgency = "";
     	}
     	
-    	log.error("doctorUrgency " + doctorUrgency);
+    	log.debug("doctorUrgency " + doctorUrgency);
     	
         if(doctorTreatment != null && !doctorTreatment.equals("")){
         	//Create a new obs with the doctor's response
@@ -222,7 +222,7 @@ public class SaveResponseServlet extends HttpServlet {
         	doctorTreatment = "";
         }
         
-        log.error("doctorTreatment " + doctorTreatment);
+        log.debug("doctorTreatment " + doctorTreatment);
         
         if(doctorComments != null && !doctorComments.equals("")){
         	//Create a new obs with the doctor's response
@@ -246,7 +246,7 @@ public class SaveResponseServlet extends HttpServlet {
             o.setObsDatetime(new Date());
             o.setCreator(Context.getAuthenticatedUser());
             o.setValueText(doctorComments);
-            
+            o.setEncounter(e);
             //Update and save the encounter and obs
             e.addObs(o);       
             Context.getObsService().saveObs(o, "");
@@ -255,7 +255,7 @@ public class SaveResponseServlet extends HttpServlet {
         	doctorComments = "";
         }
         
-        log.error("doctorComments " + doctorComments);
+        log.debug("doctorComments " + doctorComments);
         
         //Set plan
         String plan = "";
@@ -287,19 +287,23 @@ public class SaveResponseServlet extends HttpServlet {
 		String smsNumber = user.getUserProperty("Contact Phone");
     	try {
         	String SMSmessage = "DX: " + diagnosisList + "; Plan: " + plan;
-	    	System.out.println("SaveResponseServlet.doPost(): sms -> " +
+	    	log.debug(": sms -> " +
 	    			"patient: " + patientId + " msg: " + SMSmessage);
     		boolean sms = MDSNotificationReply.sendSMS(smsNumber, 
     				q.getCaseIdentifier(), patientId, SMSmessage);
 
-	    	System.out.println("SaveResponseServlet.doPost(): sms -> " +
+	    	log.debug(": sms -> " +
 	    			"success: " + sms);
     	}
     	catch (ConnectException err) {
 			log.error("Couldn't connect to notification server " 
 					+ Context.getAdministrationService().getGlobalProperty(
 							Property.MDS_URI));
+			err.printStackTrace();
+			fail(output, "Failed to send SMS message." + err.getMessage());
 		} catch (Exception err) {
+			log.error("Unable to send notification", err);
+			err.printStackTrace();
 			fail(output, "Failed to send SMS message." + err.getMessage());
 		}
     	 
@@ -315,7 +319,7 @@ public class SaveResponseServlet extends HttpServlet {
     			uploaderEmailAddress = e.getCreator().getUserProperty(
     					"notificationAddress", "noaddress@noserver.com");
 
-    	    	System.out.println("SaveResponseServlet.doPost(): email -> " +
+    	    	log.debug(": email -> " +
     	    			"uploaderEmailAddress: " +  uploaderEmailAddress);
     		}
     		if(uploaderEmailAddress != null && !uploaderEmailAddress.equals("")){
@@ -338,7 +342,7 @@ public class SaveResponseServlet extends HttpServlet {
     	    		+"\nUrgency Level: " + doctorUrgency 
     	    		+"\nDiagnosis: " + diagnosisList 
     	    		+"\nPlan: " + plan;
-    	    	System.out.println("SaveResponseServlet.doPost(): email -> " +
+    	    	log.debug(": email -> " +
     	    			"patient: " + patientId + " msg: " + emailMessage);
     			String subject = "Referral Response for Patient " + patientId;
 	    		List<String> emailAddr = new ArrayList<String>();
@@ -351,7 +355,7 @@ public class SaveResponseServlet extends HttpServlet {
 	    		boolean email = MDSNotificationReply.sendEmail(emailAddresses, 
 	    				q.getCaseIdentifier(), patientId, subject,emailMessage);
 
-    	    	System.out.println("SaveResponseServlet.doPost(): email -> " +
+    	    	log.debug(": email -> " +
     	    			"success: " + email);
     		}
 		}
@@ -363,9 +367,18 @@ public class SaveResponseServlet extends HttpServlet {
 			err.printStackTrace();
 			fail(output,"Failed to send email message " + err.getMessage());
 		}
-		response.sendRedirect(request.getContextPath() 
-				+  "/admin/encounters/encounter.form?encounterId="+encounterId);
+    	response.sendRedirect(request.getContextPath() 
+				+  "/module/sana/queue/v1/queue.form");
+		//response.sendRedirect(request.getContextPath() 
+		//		+  "/admin/encounters/encounter.form?encounterId="+encounterId);
     }
     
-    
+    @Override
+    protected void doGet(HttpServletRequest request, 
+    		HttpServletResponse response) throws ServletException, IOException 
+    {
+    	response.sendRedirect(request.getContextPath() 
+				+  "/module/sana/queue/v1/queue.htm");
+    	
+    }
 }

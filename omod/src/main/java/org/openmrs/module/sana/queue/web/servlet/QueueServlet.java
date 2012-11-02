@@ -14,7 +14,7 @@ import org.openmrs.api.APIException;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.sana.queue.QueueItem;
 import org.openmrs.module.sana.queue.QueueItemService;
-import org.openmrs.module.sana.queue.web.resource.QueueItemResource;
+import org.openmrs.module.sana.queue.web.resource.v1.QueueItemResource;
 
 @Deprecated
 public class QueueServlet extends HttpServlet {
