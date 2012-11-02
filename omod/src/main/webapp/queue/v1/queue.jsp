@@ -1,8 +1,8 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <openmrs:require privilege="View Encounter Queue" otherwise="/login.htm" 
-    redirect="/module/sana/queue/queue.htm" />
+    redirect="/module/sana/queue/v1/queue.htm" />
 <%@ include file="/WEB-INF/template/header.jsp" %>
-<%@ include file="localHeader.jsp" %>
+<%@ include file="/WEB-INF/view/module/sana/localHeader.jsp" %>
 
 <script type="text/javascript" src="${pageContext.request.contextPath}/moduleResources/sana/jquery-1.4.4.js"></script>
 <style>
@@ -261,17 +261,17 @@
 <h1><spring:message code="sana.queue_title" /></h1>
 <ul id="menu">
 	<li class="first">
-		<a href="${pageContext.request.contextPath}/module/sana/queue/queue.form">
+		<a href="${pageContext.request.contextPath}/module/sana/queue/v1/queue.form">
 		  <spring:message code='sana.queue_pending_cases'/>
 		</a>
 	</li>
 	<li>
-		<a href="${pageContext.request.contextPath}/module/sana/queue/queueDeferred.form">
+		<a href="${pageContext.request.contextPath}/module/sana/queue/v1/queueDeferred.form">
 		  <spring:message code='sana.queue_deferred_cases'/>
 		</a>
 	</li>
 	<li >
-		<a href="${pageContext.request.contextPath}/module/sana/queue/queueClosed.form">
+		<a href="${pageContext.request.contextPath}/module/sana/queue/v1/queueClosed.form">
 		  <spring:message code='sana.queue_closed_cases'/>
 		</a>
 	</li>
@@ -289,7 +289,7 @@
 
 
 <!-- Table Header -->   
-<form action="${pageContext.request.contextPath}/module/sana/queue/queue.form" 
+<form action="${pageContext.request.contextPath}/module/sana/queue/v1/queue.form" 
         method="POST" id="queueFormid" name="queueForm">
     <input type=hidden name="chklist" id="chklistid" />
     <!-- TODO ADD THE SORT BY HERE and items per page -->
@@ -458,14 +458,15 @@
 									${item.patient.familyName}, ${item.patient.givenName}
 							</a>
 					   </td>
+					   
 						<td valign="top">${item.patient.age}${data}</td>
 						<td valign="top">${item.patient.gender}</td>
 						<td valign="top">
-							<a href="${pageContext.request.contextPath}/module/sana/queue/encounterViewer.form?encounterId=${item.encounter.encounterId}">
+							<a href="${pageContext.request.contextPath}/module/sana/queue/v1/encounterViewer.form?encounterId=${item.encounter.encounterId}">
 								${item.procedureTitle}
 							</a>
 						</td>
-						<td valign="top"><fmt:formatDate value="${item.dateCreated}" pattern="MM/dd/yyyy hh:mm"/></td>
+						<td valign="top">${item.dateCreated}<fmt:formatDate value="${item.dateCreated}" pattern="MM/dd/yyyy hh:mm"/></td>
 						<td valign="top">${item.phoneIdentifier}</td>
 						<td valign="top" style="white-space: nowrap;">
 						<ul class="mediaList">

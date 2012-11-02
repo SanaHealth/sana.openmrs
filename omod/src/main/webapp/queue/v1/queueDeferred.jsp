@@ -1,6 +1,6 @@
 <%@ include file="/WEB-INF/template/include.jsp"%>
 <openmrs:require privilege="View Encounter Queue" otherwise="/login.htm" 
-    redirect="/module/sana/queue/queue.htm" />
+    redirect="/module/sana/queue/v1/queue.htm" />
 <%@ include file="/WEB-INF/template/header.jsp"%>
 <%@ include file="localHeader.jsp"%>
 
@@ -291,13 +291,13 @@
 <h1><spring:message code="sana.queue_title" /></h1>
 <ul id="menu">
 	<li class="first">
-		<a href="${pageContext.request.contextPath}/module/sana/queue/queue.form"><spring:message code='sana.queue_pending_cases'/></a>
+		<a href="${pageContext.request.contextPath}/module/sana/queue/v1/queue.form"><spring:message code='sana.queue_pending_cases'/></a>
 	</li>
 	<li>
-		<a href="${pageContext.request.contextPath}/module/sana/queue/queueDeferred.form"><spring:message code='sana.queue_deferred_cases'/></a>
+		<a href="${pageContext.request.contextPath}/module/sana/queue/v1/queueDeferred.form"><spring:message code='sana.queue_deferred_cases'/></a>
 	</li>
 	<li >
-		<a href="${pageContext.request.contextPath}/module/sana/queue/queueClosed.form"><spring:message code='sana.queue_closed_cases'/></a>
+		<a href="${pageContext.request.contextPath}/module/sana/queue/v1/queueClosed.form"><spring:message code='sana.queue_closed_cases'/></a>
 	</li>
 </ul>
 <!-- Retriving List of queue items,procedure rows,dateItems ffrom the controller through map -->
@@ -309,7 +309,7 @@
 <c:set var="count" value='${map["totocount"]}' />
 <c:set var="pageno" value='${map["pageno"]}' />
 <!--  Added new Procedure and Search bottons -->
-<form action="${pageContext.request.contextPath}/module/sana/queue/queueDeferred.form" method="post" id="queueFormid" name="queueForm">
+<form action="${pageContext.request.contextPath}/module/sana/queue/v1/queueDeferred.form" method="post" id="queueFormid" name="queueForm">
 <input type=hidden name="chklist" id="chklistid" />
 <b class="boxHeader">
 
@@ -492,7 +492,7 @@
 						<td valign="top">${item.patient.age}${data}</td>
 						<td valign="top">${item.patient.gender}</td>
 						<td valign="top">
-							<a href="${pageContext.request.contextPath}/module/sana/queue/encounterViewer.form?encounterId=${item.encounter.encounterId}">
+							<a href="${pageContext.request.contextPath}/module/sana/queue/v1/encounterViewer.form?encounterId=${item.encounter.encounterId}">
 								${item.procedureTitle}
 							</a>
 						</td>

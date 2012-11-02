@@ -1,11 +1,19 @@
 <%@ include file="/WEB-INF/template/include.jsp"%>
 <openmrs:require privilege="View Encounter Queue" otherwise="/login.htm" 
-    redirect="/module/sana/queue/queue.htm" />
+    redirect="/module/sana/queue/v1/queue.htm" />
 <%@ include file="/WEB-INF/template/header.jsp"%>
-<%@ include file="localHeader.jsp"%>
+<%@ include file="/WEB-INF/view/module/sana/localHeader.jsp" %>
 
-<openmrs:htmlInclude file="/moduleResources/sana/jquery-1.4.4.js" />
+<openmrs:htmlInclude file="${pageContext.request.contextPath}/moduleResources/sana/jquery-1.4.4.js" />
 <script language="javascript">
+
+function send(){
+    var frm = document.getElementById("review");
+    
+    
+    frm.submit();
+	
+}
 
 function backToQueue() {
   document.location.href= "queue.form"
@@ -24,7 +32,7 @@ function clearList(){
 function conceptDictSearch(searchBox) {
   var phrase = document.searchForm.searchInput.value;
   var source = document.getElementById('conceptSourceName').value;
-  jQuery.get("${pageContext.request.contextPath}/moduleServlet/sana/queue/conceptSearchServlet",
+  jQuery.get("${pageContext.request.contextPath}/moduleServlet/sana/conceptSearchServlet",
              {'phrase':phrase,'conceptSourceName':source},
              function(data) {
                var lst = document.getElementById('searchResults');
@@ -77,7 +85,7 @@ function retake() {
   var msg = prompt("Message to Request More Patient Information from Referring Clinician: ",'');
   if(msg != null){
   var queueID = document.getElementById('queueItemId').value;
-  jQuery.post("${pageContext.request.contextPath}/moduleServlet/sana/queue/retakeServlet",
+  jQuery.post("${pageContext.request.contextPath}/moduleServlet/sana/retakeServlet",
              {'msg':msg,'queueItemId':queueID},
              function(data) {
                 if(data == "OK") {
@@ -104,7 +112,7 @@ width:100%;
 .leftBox {
   border: 1px solid #6D9BC5;
   width: 28%;
-  height: 100%;
+  min-height: 512px;
   float: left;
   background-color: #C6D9F1;
   overflow:auto;
@@ -266,7 +274,7 @@ input.collapseButton {
 				<div id="searchResults" class="indented"></div>
 				<div id="horizBar2" class="indented"><hr align=left noshade size=4 width=90% style="color: white;"></div>
 			</form>
-			<form name="input" action="${pageContext.request.contextPath }/moduleServlet/sana/queue/saveResponseServlet" method="post">
+			<form id="review" name="input" action="${pageContext.request.contextPath }/moduleServlet/sana/saveResponseServlet" method="post">
 				<input type="hidden" name="queueItemId" value="${encounter.queueItem.queueItemId}"/>
 				<input type="hidden" name="encounterId" value="${encounter.queueItem.encounterId}"/>
 				<p><spring:message code="sana.diagnoses" />: <input type="button" id="clearButton" onclick="return clearList()" value="Clear List"></p>
@@ -293,17 +301,17 @@ input.collapseButton {
 	 	
 	</div>
 	
-	<div class="rightBox">
+	<div class="rightBox" id="rightContainer">
 		<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"
 					id="TestViewer" width="100%" height="100%"
 					codebase="http://fpdownload.macromedia.com/get/flashplayer/current/swflash.cab">
-					<param name="movie" value="${pageContext.request.contextPath}/moduleResources/sana/mediaviewer/MediaFileViewer.swf" />
+					<param name="movie" value="${pageContext.request.contextPath}/moduleResources/sana/MediaFileViewer.swf" />
 					<param name="quality" value="high" />
 					<param name="bgcolor" value="#869ca7" />
 					<param name="allowScriptAccess" value="always" />
 					<param name="allowFullScreen" value="true" />
 					<param name="FlashVars" value="patientFirstName=${encounter.queueItem.patient.givenName}&patientLastName=${encounter.queueItem.patient.familyName}&dateUploaded=${encounter.queueItem.dateUploaded}&encounterID=${encounter.queueItem.encounterId}&contextPath=${pageContext.request.contextPath}">
-					<embed src="${pageContext.request.contextPath}/moduleResources/sana/mediaviewer/MediaFileViewer.swf" quality="high" bgcolor="#869ca7"
+					<embed src="${pageContext.request.contextPath}/moduleResources/sana/MediaFileViewer.swf" quality="high" bgcolor="#869ca7"
 						width="100%" height="100%" name="TestViewer" align="middle"
 						play="true"
 						loop="false"
@@ -318,6 +326,5 @@ input.collapseButton {
 	</div>
 </div>
 
-<%@ include file="/WEB-INF/template/footer.jsp" %>
 
 

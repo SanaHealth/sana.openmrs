@@ -1,6 +1,6 @@
 <%@ include file="/WEB-INF/template/include.jsp"%>
 <openmrs:require privilege="View Encounter Queue" otherwise="/login.htm" 
-    redirect="/module/sana/queue/queue.htm" />
+    redirect="/module/sana/queue/v1/queue.htm" />
 <%@ include file="/WEB-INF/template/header.jsp"%>
 <%@ include file="localHeader.jsp"%>
 
