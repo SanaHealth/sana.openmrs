@@ -32,9 +32,9 @@ public class EncounterFormController {
 	protected final Log log = LogFactory.getLog(getClass());
 
 	/** Success form view name */
-	private final String SUCCESS_VIEW = "/module/sana/queue/encounterViewer";
+	private final String SUCCESS_VIEW = "/module/sana/queue/v1/encounterViewer";
 
-	@RequestMapping(value = "/module/sana/queue/encounterViewer.form", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/sana/queue/v1/encounterViewer.form", method = RequestMethod.GET)
     protected String setupForm(ModelMap map, @RequestParam(value="encounterId", required=false)
     	String encounterId, @RequestParam(value="queueItemId", required=false)
     		String queueItemId) throws Exception

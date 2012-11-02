@@ -42,7 +42,7 @@ import org.springframework.web.servlet.mvc.ParameterizableViewController;
  * jsp page in the /metadata/moduleApplicationContext.xml file
  */
 //@Controller
-//@RequestMapping(value = "module/sana/queue/queueDeferred.form")
+//@RequestMapping(value = "module/sana/queue/v1/queueDeferred.form")
 public class DeferredQueueController{
 
     protected final Log log = LogFactory.getLog(getClass());

@@ -8,21 +8,33 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
-@RequestMapping(value = "module/sana/mds/mdsAdmin.form")
+@RequestMapping(value = "module/sana/mds/")
 public class MDSAdminController {
 	
 	/** Logger for this class and subclasses */
 	protected final Log log = LogFactory.getLog(getClass());
 	
 	/** Success form view name */
-	private final String SUCCESS_FORM_VIEW = "/module/sana/mds/mdsAdmin";
+	private final String SUCCESS_FORM_VIEW = "/module/sana/mds/admin";
 	
 	/**
 	 * Initially called after the formBackingObject method to get the landing form name  
 	 * @return String form view name
 	 */
-	@RequestMapping(method = RequestMethod.GET)
-	public String showForm(ModelMap map){
+	@RequestMapping(method = RequestMethod.GET, value="admin")
+	public String showAdminForm(ModelMap map){
 		return SUCCESS_FORM_VIEW;
+	}
+	
+	/** Success form view name */
+	private final String LOG_FORM_VIEW = "/module/sana/mds/logs";
+	
+	/**
+	 * Initially called after the formBackingObject method to get the landing form name  
+	 * @return String form view name
+	 */
+	@RequestMapping(method = RequestMethod.GET, value="logs")
+	public String showLogForm(ModelMap map){
+		return LOG_FORM_VIEW;
 	}
 }

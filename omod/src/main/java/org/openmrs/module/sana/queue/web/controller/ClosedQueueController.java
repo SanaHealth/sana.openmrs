@@ -35,7 +35,7 @@ public class ClosedQueueController  {
     private final String JSON_SUCCESS_VIEW =ModuleConstants.FORM_PATH + "jsonformat";
     private final String XML_SUCCESS_VIEW =ModuleConstants.FORM_PATH + "xmlformat";
 
-    //@RequestMapping(value = "module/sana/queue/queueClosed.form",method=RequestMethod.GET)
+    //@RequestMapping(value = "module/sana/queue/v1/queueClosed.form",method=RequestMethod.GET)
     public ModelAndView handleRequestInternal(HttpServletRequest request, 
     		HttpServletResponse response) 
     {

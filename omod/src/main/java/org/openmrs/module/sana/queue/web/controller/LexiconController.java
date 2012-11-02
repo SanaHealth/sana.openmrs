@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  *
  */
 @Controller
-@RequestMapping(value = "/module/sana/lexicon/")
+@RequestMapping(value = "module/sana/lexicon/")
 public class LexiconController {
 	
 	/** Logger for this class and subclasses */

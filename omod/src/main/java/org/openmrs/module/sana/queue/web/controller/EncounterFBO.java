@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -21,6 +22,9 @@ import org.openmrs.module.sana.queue.QueueItemStatus;
  *
  */
 public class EncounterFBO {
+	
+	/** Logger for this class and subclasses */
+	protected final Log log = LogFactory.getLog(getClass());
 	
 	/**
 	 * Constructs a new view of an encounter mapped to the Queue
@@ -63,8 +67,8 @@ public class EncounterFBO {
 		}
 
         //Initialize patient response with date of initial encounter
-        patientResponses = "<b>Date of Encounter:</b><br>" + q.getDateCreated()
-        .toString().substring(0,10) + "<br><br>";        
+        patientResponses = "<b>Date of Encounter:</b><br>" 
+        		+ q.getDateCreated().toString().substring(0,10) + "<br><br>";        
 		
 		String diagnoses = "";
 		String urgency = "";
@@ -73,6 +77,7 @@ public class EncounterFBO {
 		String infoRequest = "";
 		String conceptName = "";
 		String doctorName = "";
+		Locale l = Context.getLocale();
 		
 		for(Obs o : q.getEncounter().getObs()) {
 			//append to summary of all patient responses
@@ -85,7 +90,7 @@ public class EncounterFBO {
 				if(q.getStatus().equals(QueueItemStatus.DEFERRED))
 				{
 					if(conceptName.equals("DOCTOR INFO REQUEST")){
-						infoRequest +=  "<br>" + o.getValueText();
+						infoRequest +=  "<br>" + o.getValueAsString(l);
 						doctorName = o.getCreator().getGivenName() + " " 
 						+ o.getCreator().getFamilyName();	
 					}
@@ -94,32 +99,32 @@ public class EncounterFBO {
 				if(q.getStatus().equals(QueueItemStatus.CLOSED))
 				{
 					if(conceptName.equals("DOCTOR DIAGNOSIS")){
-						String value = o.getValueText();
+						String value = o.getValueAsString(l);
 						if(value.contains("|"))
 							diagnoses += "<br>" +value.substring(0,
 									value.indexOf('|')-1).toLowerCase();
 						else
-							diagnoses += "<br>" + o.getValueText();
+							diagnoses += "<br>" + o.getValueAsString(l);
 						doctorName = o.getCreator().getGivenName() + " " 
 									+ o.getCreator().getFamilyName();
 					}
 					else if(conceptName.equals("DOCTOR URGENCY LEVEL")){
-						urgency +=  "<br>" + o.getValueText();
+						urgency +=  "<br>" + o.getValueAsString(l);
 						doctorName = o.getCreator().getGivenName() + " " 
 									+ o.getCreator().getFamilyName();
 					}
 					else if(conceptName.equals("DOCTOR TREATMENT RECOMMENDATION")){
-						treatment +=  "<br>" + o.getValueText();
+						treatment +=  "<br>" + o.getValueAsString(l);
 						doctorName = o.getCreator().getGivenName() + " " 
 									+ o.getCreator().getFamilyName();	
 					}
 					else if(conceptName.equals("DOCTOR COMMENTS")){
-						comments +=  "<br>" + o.getValueText();
+						comments +=  "<br>" + o.getValueAsString(l);
 						doctorName = o.getCreator().getGivenName() + " " 
 									+ o.getCreator().getFamilyName();
 					}
 					else if(conceptName.equals("DOCTOR INFO REQUEST")){
-						infoRequest +=  "<br>" + o.getValueText();
+						infoRequest +=  "<br>" + o.getValueAsString(l);
 						doctorName = o.getCreator().getGivenName() + " " 
 									+ o.getCreator().getFamilyName();	
 					}
@@ -140,7 +145,7 @@ public class EncounterFBO {
 					!conceptName.equals("DOCTOR URGENCY LEVEL") &&
 					!conceptName.equals("DOCTOR COMMENTS") &&
 					!conceptName.equals("DOCTOR INFO REQUEST")){
-					if (o.getValueText().equals("")){
+					if (o.getValueAsString(l).equals("")){
 						patientResponses += "<b>" + o.getConcept()
 							.getDescription().getDescription() 
 							+ "</b><br>No response given<br><br>";
@@ -148,7 +153,7 @@ public class EncounterFBO {
 					else{
 						patientResponses += "<b>" + o.getConcept()
 							.getDescription().getDescription() 
-							+ "</b><br>" + o.getValueText() + "<br><br>";
+							+ "</b><br>" + o.getValueAsString(l) + "<br><br>";
 					}
 				}
 			}
@@ -185,7 +190,6 @@ public class EncounterFBO {
 		
 	}
 	
-	private Log log = LogFactory.getLog(this.getClass());
 	public String patientResponses;
 	public String status;
 	public String doctorName;
