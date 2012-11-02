@@ -174,7 +174,7 @@ public class QueueItemResource extends DataDelegatingCrudResource<QueueItem>{
 		int totalrows = queueService.getProDateRowsCount(
 				procedure,defcount,checkProo, checkDate, iArchieveState,
 				startvalue,endvalue,sortvalue);
-		
+		log.debug("Total rows:" + totalrows);
 		//System.out.println("Total Row count:"+totalrows);
     	List<QueueItem> items = queueService.getProDateRows(procedure,defcount,
     			checkProo, checkDate, iArchieveState,startvalue,endvalue,
@@ -193,11 +193,11 @@ public class QueueItemResource extends DataDelegatingCrudResource<QueueItem>{
 		int totalrows = queueService.getProDateRowsCount(
 				procedure,defcount,checkProo, checkDate, iArchieveState,
 				startvalue,endvalue,sortvalue);
-		
-		//System.out.println("Total Row count:"+totalrows);
+		log.debug("Total rows:" + totalrows);
     	List<QueueItem> items = queueService.getProDateRows(procedure,defcount,
     			checkProo, checkDate, iArchieveState,startvalue,endvalue,
     			sortvalue);
+		log.debug("Returning queue items, count: " + items);
     	return items;
 	}
 	

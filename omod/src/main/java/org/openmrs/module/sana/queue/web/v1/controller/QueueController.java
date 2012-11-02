@@ -52,7 +52,7 @@ import org.springframework.web.servlet.mvc.ParameterizableViewController;
  *
  */
 @Controller
-@RequestMapping(value = "/module/"+Module.ID+"/queue/v1/")
+@RequestMapping(value = "module/"+Module.ID+"/queue/v1/")
 public class QueueController {
 
 	
@@ -262,16 +262,14 @@ public class QueueController {
 		map.put(PAGE, pageno);
 
 		request.setAttribute("proname", "SHOW ALL");
-		log.debug("Returning " + items.size() + "axx deferred queue items");
+		log.debug("Returning " + items.size() + " deferred queue items");
 
 		if (request.getParameter(FORMAT) == null
 				|| request.getParameter(FORMAT).equalsIgnoreCase("htmlformat")) {
 			// System.out.println("formate:"+request.getParameter("disformate"));
 
 			return new ModelAndView(HTML_SUCCESS_VIEW, "map", map);
-		} else
-
-		if (request.getParameter(FORMAT).equalsIgnoreCase("Jsonformat")) {
+		} else if (request.getParameter(FORMAT).equalsIgnoreCase("Jsonformat")) {
 			sbr = QueueItemJson.encode(items);
 			Map<String,Object> map1 = new HashMap<String,Object>();
 			map1.put("sbr", sbr.toString());
