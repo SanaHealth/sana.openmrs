@@ -1,6 +1,6 @@
 <%@ include file="/WEB-INF/template/include.jsp"%>
 <%@ include file="/WEB-INF/template/header.jsp"%>
-<%@ include file="localHeader.jsp"%>
+<%@ include file="/WEB-INF/view/module/sana/localHeader.jsp" %>
 <script type="text/javascript" src="${pageContext.request.contextPath}/moduleResources/sana/jquery-1.4.4.js"></script>
 
 <script type="text/javascript">
@@ -106,7 +106,7 @@
 <h2><spring:message code='sana.modify_concept_dictionary'/></h2><br>
 <b class="boxHeader"><spring:message code='sana.add_vocabulary'/></b>
 	<div class="box">
-		<form name="input" action="${pageContext.request.contextPath }/moduleServlet/sana/queue/queue/lexiconServlet" onSubmit="return validateForm('add')" enctype="multipart/form-data" method="post">
+		<form name="input" action="${pageContext.request.contextPath }/moduleServlet/sana/lexiconServlet" onSubmit="return validateForm('add')" enctype="multipart/form-data" method="post">
 		<input type="hidden" name="action" value="add"/>
 		<table cellpadding="5" cellspacing="0">
             <tr>
@@ -165,7 +165,7 @@
 
 <b class="boxHeader"><spring:message code='sana.update_vocabulary'/></b>
 	<div class="box">
-		<form name="input" action="${pageContext.request.contextPath }/moduleServlet/sana/queue/lexiconServlet" onSubmit="return validateForm('update')" enctype="multipart/form-data" method="post">
+		<form name="input" action="${pageContext.request.contextPath }/moduleServlet/sana/lexiconServlet" onSubmit="return validateForm('update')" enctype="multipart/form-data" method="post">
 		<input type="hidden" name="action" value="update"/>
 		<table cellpadding="5" cellspacing="0">
             <tr>
@@ -224,7 +224,7 @@
 <b class="boxHeader"><spring:message code='sana.delete_vocabulary' /></b>
 <div class="box">
 	<form name="input"
-		action="${pageContext.request.contextPath }/moduleServlet/sana/queue/lexiconServlet"
+		action="${pageContext.request.contextPath }/moduleServlet/sana/lexiconServlet"
 		onSubmit="return validateForm('delete')" enctype="multipart/form-data"
 		method="post">
 		<input type="hidden" name="action" value="delete" />
