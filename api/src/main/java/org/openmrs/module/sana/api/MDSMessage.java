@@ -27,7 +27,7 @@ public class MDSMessage {
     
     @Override
     public String toString(){
-    	return String.format("client: \"%s\", date: \"%s\", id: \"%s\", ", 
-    			phoneId, procedureDate, caseIdentifier);
+    	return String.format("client: \"%s\", date: \"%s\", procedure: \"%s\", id: \"%s\", patient: \"%s\"", 
+    			phoneId, procedureDate, procedureTitle, caseIdentifier, patientId);
     }
 }

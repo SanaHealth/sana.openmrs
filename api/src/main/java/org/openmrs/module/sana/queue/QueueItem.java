@@ -35,15 +35,15 @@ public class QueueItem extends BaseOpenmrsData implements Serializable {
     public String archivedBy;
     
     public User creator;
-        public Date dateCreated;
-        public User changedBy;
-        public Date dateChanged;
+    public Date dateCreated;
+    public User changedBy;
+    public Date dateChanged;
     
-        /**
-         * A new empty queue item with status set to NEW
-         */
+    /**
+     * A new empty queue item with status set to NEW
+     */
     public QueueItem() {
-        setStatus(QueueItemStatus.NEW);
+    	setStatus(QueueItemStatus.NEW);
     }
     
     /**
@@ -58,6 +58,20 @@ public class QueueItem extends BaseOpenmrsData implements Serializable {
         setEncounter(e);
         setDateUploaded(d);
         setStatus(QueueItemStatus.NEW);
+    }
+    
+    public String toString(){
+    	return String.format("%s, %s, %s, %s, %s, %s, %s, %s, %s, ",
+    			QueueItem.class.getSimpleName(),
+    			queueItemId,
+    		    status,
+    		    dateUploaded,
+    		    patientId,
+    		    encounterId,
+    		    phoneIdentifier,
+    		    procedureTitle,
+    		    caseIdentifier);
+    			
     }
     
     /**

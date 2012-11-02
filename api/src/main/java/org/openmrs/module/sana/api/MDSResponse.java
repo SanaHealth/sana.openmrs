@@ -29,7 +29,6 @@ public class MDSResponse {
 	/** A message body */
 	public String message;
 	
-
     /**
      * Called when a transaction is successful.
      * @param request The originating request
@@ -55,7 +54,7 @@ public class MDSResponse {
         	out.flush();
         	out.close();
         } catch(IOException e){
-        	log.error("problem while writing fail(): " + e.toString());
+        	log.error("problem while writing succeed(): " + e.toString());
         }
     }
     
@@ -86,5 +85,53 @@ public class MDSResponse {
         } catch(IOException e){
         	log.error("problem while writing fail(): " + e.toString());
         }
+    }
+    
+    /**
+     * Called when a transaction is successful. The response code is set to 
+     * unspecified.
+     * @param message The message body of the response
+     * @return
+     */
+    public static MDSResponse succeed(String message){
+    	return succeed(message, "unspecified");
+    }
+    
+    /**
+     * Called when a transaction is successful.
+     * @param message The message body of the response
+     * @param code
+     * @return
+     */
+    public static MDSResponse succeed(String message, String code){
+    	MDSResponse mdsresponse = new MDSResponse();
+    	mdsresponse.status = MDSResponse.SUCCESS;
+    	mdsresponse.code = "unspecified";
+    	mdsresponse.message = message;
+    	return mdsresponse;
+    }
+    
+    /**
+     * Called when a transaction fails. The response code is set to 
+     * unspecified.
+     * @param message The message body of the response
+     * @return
+     */
+    public static MDSResponse fail(String message){
+    	return fail(message, "unspecified");
+    }
+    
+    /**
+     * Called when a transaction fails.
+     * @param message The message body of the response
+     * @param code
+     * @return
+     */
+    public static MDSResponse fail(String message, String code){
+    	MDSResponse mdsresponse = new MDSResponse();
+    	mdsresponse.status = MDSResponse.FAILURE;
+    	mdsresponse.code = "unspecified";
+    	mdsresponse.message = message;
+    	return mdsresponse;
     }
 }
