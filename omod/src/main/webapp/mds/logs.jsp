@@ -1,18 +1,143 @@
 <%@ include file="/WEB-INF/template/include.jsp"%>
 <%@ include file="/WEB-INF/template/header.jsp"%>
-<%@ include file="localHeader.jsp"%>
+<%@ include file="/WEB-INF/view/module/sana/localHeader.jsp" %>
+<script type="text/javascript" src="${pageContext.request.contextPath}/moduleResources/sana/jquery-1.4.4.js"></script>
+
 <div>   
 <h2><spring:message code="sana.mdsLog"/></h2>
 </div>
 <div id="output"></div>
 <script language="javascript">
 //Functions for Onclick methods
-   
-   window.onload = function()
-   {
-	   var logs = jquery.get("http://localhost/mds/log")
-       jQuery("#output").html(logs);
-       
-   }
+    var page = 1; 
+    var auto = 0;
+    var logurl = "${pageContext.request.scheme}://" +
+		      "${pageContext.request.localName}" +
+		      ":${pageContext.request.serverPort}" +
+		      "/mds/log/";
+    var loglisturl = "${pageContext.request.scheme}://" +
+              "${pageContext.request.localName}" +
+              ":${pageContext.request.serverPort}" +
+              "/mds/log/list";
+		      
+    function getLogs()
+    {
+    	$('#logs').load(loglisturl);
+	    document.getElementById('status').innerHTML = new Date();
+    }
+    function openLogsInNewWindow(){
+        window.open(logurl);
+    }
+    function toggleDetails(id) {
+        if(auto == 1){
+                document.getElementById('refreshB').value = "Click to Start!";
+                clearInterval();
+                auto = 0;
+            }
+        var detail = $("#log-"+id+"-detail");
+        if(!detail.hasClass("data")) {
+            getDetails(id, function() { detail.addClass("data"); detail.toggle("slow"); });
+        } else {
+            detail.toggle("slow");
+        }
+    }
+    function showDetail(id) {
+        jQuery("#log-"+id+"-detail").show();
+    }
+    function json_update(msg, callback) {
+        id = msg['id'];
+        data = msg['data'];
+        updateDetails(id,data);
+        callback();
+    }
+
+    function getDetails(id, callback) {
+        $.getJSON("/mds/log-detail/" + id, 
+                {}, 
+                function(data) {json_update(data, callback); });  
+    }
+
+    function buildRowHtml(record) { 
+        return ("+" + "&nbsp;<b>"+ record['level_name'] + "&nbsp;" 
+           + record['filename'] + ":" + record['line_number'] + "</b> &nbsp;" + record['message']);
+    }
+
+    function updateDetails(id, data) {
+        var message = '<td colspan="3"><dl>';
+
+        for (var i in data) {
+      
+            if("ERROR" == data[i]['level_name']){
+                message += '<dd class="err">' + buildRowHtml(data[i]) + "</dd>";
+            } else if("DEBUG" == data[i]['level_name']){
+                message += '<dd class="debug">' + buildRowHtml(data[i]) + "</dd>";
+            } else
+            message += '<dd>' + buildRowHtml(data[i]) + '</dd>';
+
+            //message = message + "" + data[i].message + "<br/>";
+        }
+        message = message + "</dl></td>";
+        var detail = $("#log-"+id+"-detail");
+        detail.html(message);
+        detail.attr('data', data);
+      
+    }
+
+    function hideDetail(id) {
+        jQuery("#log-"+id+"-detail").hide();
+    }
 </script>
+<style>
+td.selectp
+{
+    text-decoration:underline;
+}
+.err
+{
+    background-color: #ffaaaa;
+}
+.debug
+{
+    background-color: #dffddd;
+}
+#logs
+{
+    background-color: #ffffff;
+    
+}
+.logheader
+{
+    background-color: #e2baa5;
+    font-weight: bold;
+    width: inherit;
+    padding: 0;
+    border-spacing: 0px;
+    border-collapse: collapse;
+}
+.pagenav
+{
+    color: #1100ff;
+}
+.detail
+{
+    background-color: #eeeeff;
+}
+</style>
+<table>
+    <tr width="100%">
+        <td width="124px" align="left"><b>Last Updated:</b></td>
+        <td  id="status" width="360px" align="center"></td>
+        <td align="right">
+        <input id="refreshB" type="button" onclick="getLogs()" value="Refresh Logs" />
+        </td>   
+    </tr>
+</table>
+<div id="logs">
+This will display the mds logs in-line(Beta feature).
+</div>
+<div id="dbg">
+<p>Press the following button to show the mds logs in a new window.</p>
+<input id="logButton" onClick="openLogsInNewWindow()" type="button" 
+    value="Open Logs In New Window"/>
+</div>
 <%@ include file="/WEB-INF/template/footer.jsp" %>
