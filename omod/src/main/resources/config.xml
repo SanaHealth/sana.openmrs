@@ -18,14 +18,8 @@
 	<!-- /Base Module Properties -->
 	
 	<require_version>${openMRSVersion}</require_version>
-	<require_database_version>1.0.5</require_database_version>
-	<require_database_version>1.0.6</require_database_version>
-	<require_database_version>1.0.7</require_database_version>
 	<require_modules>
-        <!--  Any whitespace here seems to cause an error -->
 		<require_module version="1.0">org.openmrs.module.webservices.rest</require_module>
-		<!--  merged into single module as of 2.0 -->
-		<!--   -<require_module version="2.0">org.openmrs.module.sana/mediaviewer</require_module> -->
 	</require_modules>
 	<!-- /Basic Module Properties -->
 
@@ -225,5 +219,4 @@
 		sana.hbm.xml
 		date_items.hbm.xml
 	</mappingFiles>
-	
 </module>
