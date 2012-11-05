@@ -1,6 +1,7 @@
 package org.openmrs.module.sana.queue.web.servlet;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -208,8 +209,11 @@ public class UploadServlet extends HttpServlet {
 
         try {
             // Check the date format
-            encounterDateTime = new SimpleDateFormat(pattern).parse(message.procedureDate);
-            log.debug("Encounter date: " + encounterDateTime);
+        	log.debug("Encounter date POST: "+message.procedureDate);
+        	DateFormat df = new SimpleDateFormat(pattern);
+        	//TODO correct the following to use an actual date format
+        	// i.e. df.parse(message.procedureDate);
+            encounterDateTime = new Date();
         } catch (Exception ex) {
         	log.error("Date format error", ex);
         	MDSResponse.fail(request, response, 
