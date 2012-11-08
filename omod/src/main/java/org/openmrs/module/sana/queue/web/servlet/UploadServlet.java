@@ -1,6 +1,7 @@
 package org.openmrs.module.sana.queue.web.servlet;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -115,160 +116,164 @@ public class UploadServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, 
     		HttpServletResponse response) throws ServletException, IOException 
     {
-        log.info("UploadServlet Got post");
-        MDSMessage message;
+        log.info("UploadServlet Got POST.");
+        MDSMessage message = null;
         Patient patient = null;
         Date encounterDateTime = null;
 		Encounter encounter = null;
         Map<String, Concept> idMap = null;
 		Set<Obs> observations = null;
-		QueueItem queueItem;
-
-    	
-		// grab any files from the request
+		QueueItem queueItem = null;
+        MDSResponse mds = null;
         List<FileItem> files = Collections.emptyList();
-        try {
-            files = getUploadedFiles(request);
-        } catch(APIException ex) {
-        	log.error("Error getting Request files!", ex);
-            MDSResponse.fail(request, response, ex.getMessage(), log);
-            return;
-        }
+        
+        // Step through queue item creation, log and rethrow any APIExceptions
+        // as ServletException for clean up at the end
+        try{
+        	// Check for any files
+        	try {
+        		files = getUploadedFiles(request);
+        	} catch(APIException ex) {
+        		log.error("Error getting Request files!");
+        		mds = MDSResponse.fail("Error getting Request files");
+				throw ex;
+        	}
 
-    	
-        //TODO move this into a method so that we can handle the xml changes
-        String jsonDescription = request.getParameter("description");
-        if(jsonDescription == null) { 
-        	// If we can't find it in the parameters, then we need to search 
-        	// for it in the files list.
-        	for (int i = 0; i < files.size(); ++i) {
-        		FileItem f = files.get(i);
-        		if (f == null)
-        			continue;
-        		if ("description".equals(f.getFieldName())) {
-        			jsonDescription = f.getString();
-        			files.remove(i);
-        			break;
+
+        	//TODO move this into a resource method so that we can handle the 
+        	// xml changes
+        	String jsonDescription = request.getParameter("description");
+        	if(jsonDescription == null) { 
+        		// If we can't find it in the parameters, then we need to search 
+        		// for it in the files list.
+        		for (int i = 0; i < files.size(); ++i) {
+        			FileItem f = files.get(i);
+        			if (f == null)
+        				continue;
+        			if ("description".equals(f.getFieldName())) {
+        				jsonDescription = f.getString();
+        				files.remove(i);
+        				break;
+        			}
         		}
+        		// If still null, fail
+        		if (jsonDescription == null) {
+        			log.error("Invalid description");
+        			mds = MDSResponse.fail("Invalid description for encounter");
+    				throw new ServletException("Invalid description for encounter");
+        			}
         	}
-            // If still null, fail
-        	if (jsonDescription == null) {
-        		log.error("Invalid description");
-        		MDSResponse.fail(request,response, 
-        				"Invalid description for encounter",log);
-        		return;
+
+        	// Convert to MDSMessage
+        	try {
+        		Gson gson = new Gson();
+        		message = gson.fromJson(jsonDescription, MDSMessage.class);
+        	} catch (com.google.gson.JsonParseException ex) {
+        		log.error("doPost(). Error parsing message");
+        		mds = MDSResponse.fail("Error parsing MDSMessage: " + ex);
+				throw ex;
         	}
-        }
-    	
-        // Convert to MDSMessage
-        try {
-        	Gson gson = new Gson();
-        	message = gson.fromJson(jsonDescription, MDSMessage.class);
-        } catch (com.google.gson.JsonParseException ex) {
-        	log.error("doPost(). Error parsing message");
-        	MDSResponse.fail(request, response, 
-        			"Error parsing MDSMessage: " + ex, log);
-        	return;
-        }
 
-    	log.debug(message);
-		// First check if it exists
-		String uuid = request.getParameter("caseIdentifier");
-		if(uuid != null)
-			queueItem = Context.getService(QueueItemService.class)
-								.getQueueItemByUuid(uuid);
-		
-        try{
-            patient = getPatient(message.patientId);
-        	if(patient == null){
-        		throw new PatientIdentifierException("caseIdentifier:" 
-        			+ message.caseIdentifier + ", Invalid patient id: " 
-        			+ message.patientId);
-        	} else 
-        		log.debug("Sana.UploadServlet.doPost: caseIdentifier:" 
-        			+message.caseIdentifier+", has patient "+message.patientId);
-        } catch(PatientIdentifierException ex){	
-        	log.error("Error getting patient!" + message.patientId, ex);
-			MDSResponse.fail(request, response, ex.getMessage(), log);
-			return;
-       	 
-		}
+        	log.debug(message);
+        	// First check if it exists
+        	String uuid = request.getParameter("caseIdentifier");
+        	if(uuid != null)
+        		queueItem = Context.getService(QueueItemService.class)
+        						.getQueueItemByUuid(uuid);
+        	// get the patient
+        	try{
+        		patient = getPatient(message.patientId);
+        	} catch(PatientIdentifierException ex){	
+        		log.error("Error getting patient!" + message.patientId, ex);
+        		mds = MDSResponse.fail(ex.getMessage());
+				throw ex;
+        	}
 
-        String mid = message.caseIdentifier;
-        // Only need this when debugging
-        log.debug("doPost(): message: " + message.caseIdentifier);
-     
-        for(MDSQuestion q : message.questions)
-        	    log.debug("doPost: message("+mid+
-        		"): question:"+q);
+        	String mid = message.caseIdentifier;
+        	// Only need this when debugging
+        	if(log.isDebugEnabled()){
+        		log.debug("Enounter POST, id: " + mid);
+        		for(MDSQuestion q : message.questions)
+        			log.debug("doPost: message("+mid+"): question:"+q);
+        	}
+        	
+        	// Validate before we persist anything to the database when creating 
+        	// the Encounter or Observations       
+        	String pattern = Context.getAdministrationService()
+        			.getGlobalProperty(Property.DATE_FORMAT);
 
-        // Validate before we persist anything to the database when creating 
-        // the Encounter or Observations       
-        String pattern = Context.getAdministrationService()
-    			.getGlobalProperty(Property.DATE_FORMAT);
+    		// Check the date format
+        	try {
+        		if(log.isDebugEnabled())
+        			log.debug("Encounter date POST: "+message.procedureDate);
+        		DateFormat df = new SimpleDateFormat(pattern);
+        		if(log.isDebugEnabled())
+        			log.debug(Context.getDateTimeFormat().toPattern());
+        		//TODO correct the following to use an actual date format
+        		// i.e. df.parse(message.procedureDate);
+        		encounterDateTime = new Date();
+        	} catch (Exception ex) {
+        		log.error("Date format error");
+        		mds = MDSResponse.fail("date format error: " + message.procedureDate);
+				throw ex;
+        	}
 
-        try {
-            // Check the date format
-        	log.debug("Encounter date POST: "+message.procedureDate);
-        	DateFormat df = new SimpleDateFormat(pattern);
-        	//TODO correct the following to use an actual date format
-        	// i.e. df.parse(message.procedureDate);
-            encounterDateTime = new Date();
-        } catch (Exception ex) {
-        	log.error("Date format error", ex);
-        	MDSResponse.fail(request, response, 
-        			"date: " + message.procedureDate, log);
-            return;
-        }
+    		// Validate the concepts
+        	try{
+        		idMap = makeIdToConceptMap(message);
+        	} catch (Exception ex) {
+        		log.error("Error validating concept: " + ex.getMessage());
+        		mds = MDSResponse.fail("Concept error: " + ex.getMessage());
+				throw ex;
+        	}
 
-    	
-        try{
-            // Validate the concepts
-            idMap = makeIdToConceptMap(message);
-        } catch (Exception ex) {
-        	log.error("Error validating concepts!", ex);
-        	MDSResponse.fail(request, response, 
-        			"Concept error: " + ex.getMessage(), log);
-            return;
-        }
-
-		try{
-			// translate the response into an encounter
-			encounter = makeEncounter(patient, encounterDateTime,
-					message.procedureTitle, Context.getAuthenticatedUser());
-			log.debug("Created encounter: "+encounter.getEncounterId());
-		} catch(Exception ex){
-        	log.error("Error Creating Encounter!", ex);
-			MDSResponse.fail(request, response, ex.getMessage(), log);
-			return;
-		}
-		try{
-			// Create the observations
-			observations = makeObsSet(encounter, patient, message, files,
-				encounterDateTime, idMap);
-            log.debug("Created observations: "+ observations.size());
-		} catch(Exception ex){
-			log.error("Error generating item observation set!",ex);
-			MDSResponse.fail(request, response, ex.getMessage(), log);
-			return;
-		}
+        	try{
+        		// translate the response into an encounter
+        		encounter = makeEncounter(patient, encounterDateTime,
+        				message.procedureTitle, Context.getAuthenticatedUser());
+        		if(log.isDebugEnabled())
+        			log.debug("Created encounter: "+encounter.getEncounterId());
+        	} catch(Exception ex){
+        		log.error("Error Creating Encounter!");
+        		throw new ServletException(ex);
+        	}
+			try{
+				// Create the observations
+				observations = makeObsSet(encounter, patient, message, files,
+						encounterDateTime, idMap);
+				if(log.isDebugEnabled())
+					log.debug("Created observations: "+ observations.size());
+			} catch(Exception ex){
+				log.error("Error generating item observation set!");
+				throw new ServletException(ex);
+			}
 
     	
-		// This constructs the queue item and saves it
-		try{
-			QueueItem q = makeQueueItem(encounter, patient, message);
-			log.debug("Initialized queue item: "+ q);
-			Context.getService(QueueItemService.class).saveQueueItem(q);
-			MDSResponse.succeed(request, response, "Successfully uploaded "
-					+ "procedure " + message.caseIdentifier, log);
+			// This constructs the queue item and saves it
+			queueItem = makeQueueItem(encounter, patient, message);
+			if(log.isDebugEnabled())
+				log.debug("Initialized queue item: "+ queueItem);
+			Context.getService(QueueItemService.class).saveQueueItem(queueItem);
+			mds = MDSResponse.succeed("Successfully uploaded " + "procedure " + message.caseIdentifier);
+			
+		// Exception Catch all - purges the encounter if it was created
+        } catch (Exception ex){
+        	if( encounter != null)
+        		try{
+        			Context.getEncounterService().purgeEncounter(encounter, true);
+        		} catch (APIException e){
+        			log.error("Failed purging encounter" + encounter.getUuid());
+        		}
+			log.error("Error inserting item into queue!",ex);
+			// if the message was already set we skip this
+			if (mds == null)
+				mds = MDSResponse.fail(ex.getMessage());
+        // write response and close
+        } finally {
+        	writeResponse(response, mds);
 			// close the session
 			Context.getUserContext().logout();
-		} catch (Exception ex) {
-			Context.getEncounterService().purgeEncounter(encounter, true);
-			log.error("doPost(): Error inserting item into queue!",ex);
-			MDSResponse.fail(request, response, ex.getMessage(), log);
-			return;
-		}
+        }
 	}
     
     
@@ -280,7 +285,7 @@ public class UploadServlet extends HttpServlet {
      * @return a patient with a matching identifier as produced by 
      * 			Patient.getIdentifier() or null
      */
-    private Patient getPatient(String patientIdentifier) {
+    private Patient getPatient(String patientIdentifier) throws PatientIdentifierException{
         Patient patient = null;
     	// Safety check
         if(patientIdentifier == null || "".equals(patientIdentifier)) 
@@ -290,18 +295,18 @@ public class UploadServlet extends HttpServlet {
         List<Patient> patients = patientService.getPatients(null, 
         		patientIdentifier, null, false);
         
-        if(patients.size() > 0){
+        if(patients.size() == 1 ){
             for(Patient p : patients) {
             	if(p.getPatientIdentifier().getIdentifier().equals(patientIdentifier)){
             		patient = p;
             		break;
             	} 
             } 
-        } else {
-            throw new PatientIdentifierException("No patients found with id:  " 
-        			+ patientIdentifier);
+        } else if (patients.size() > 1) {
+            throw new PatientIdentifierException("Multiple patients found with id:  " 
+        			+ patientIdentifier +". Audit patients for duplicate id's");
         }
-        if (patient == null)
+        if (patients.size() == 0)
         	throw new PatientIdentifierException("No patients found with id: " 
         			+ patientIdentifier);
         return patient;
@@ -391,7 +396,7 @@ public class UploadServlet extends HttpServlet {
         //return e;
     }
     
-    Map<String,List<FileItem>> parseFileObs(MDSMessage message, 
+    private Map<String,List<FileItem>> parseFileObs(MDSMessage message, 
     		List<FileItem> files)
     {
     	Map<String,List<FileItem>> fileMap = new HashMap<String,List<FileItem>>();
@@ -424,7 +429,7 @@ public class UploadServlet extends HttpServlet {
      * @throws ParseException 
      * @deprecated
      */
-    Set<Obs> makeObsSet(Encounter encounter, Patient patient, MDSMessage message, 
+    private Set<Obs> makeObsSet(Encounter encounter, Patient patient, MDSMessage message, 
     		List<FileItem> files, Date date) throws IOException, ParseException
     {
     	Set<Obs> observations = new HashSet<Obs>();
@@ -477,7 +482,7 @@ public class UploadServlet extends HttpServlet {
      * @param message The message to parse
      * @return a mapping of question id's to Concept objects
      */
-    Map<String, Concept> makeIdToConceptMap(MDSMessage message)
+    private Map<String, Concept> makeIdToConceptMap(MDSMessage message)
     {
     	Map<String,Concept> idMap = new HashMap<String,Concept>();
     	// validate valid Concepts and map to id
@@ -906,15 +911,24 @@ public class UploadServlet extends HttpServlet {
         return c;
     }
     
-    //TODO Use this to look up encounters?
     // for testing 
     @Override
     protected void doGet(HttpServletRequest request, 
     		HttpServletResponse response) throws ServletException, IOException 
     {
-        MDSResponse.succeed(request, response, 
-        		"Hello World from UploadServlet", log);
+        MDSResponse mds = MDSResponse.succeed( "Hello World from UploadServlet");
+        writeResponse(response, mds);
     }
+    
+    public void writeResponse(HttpServletResponse response, MDSResponse mds)
+    	throws IOException
+    {
+        PrintWriter out = response.getWriter();
+    	out.write(mds.toJSON());
+    	out.flush();
+    	out.close();
+    }
+    
 }
 
 
