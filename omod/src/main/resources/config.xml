@@ -151,46 +151,22 @@
 	
 	<!-- Servlets -->
 	<!-- Accessed through the url /pageContext()/moduleServlet/<moduleId>/<servlet-name> -->
-	
-	<servlet>
-		<servlet-name>uploadServlet</servlet-name>
-		<servlet-class>@MODULE_PACKAGE@.queue.web.v1.servlet.UploadServlet</servlet-class>
-	</servlet>
-		 
-	<servlet>
-		<servlet-name>queueServlet</servlet-name>
-		<servlet-class>@MODULE_PACKAGE@.queue.web.servlet.QueueServlet</servlet-class>
-	</servlet>
-	
-	<servlet>
-		<servlet-name>formServlet</servlet-name>
-		<servlet-class>@MODULE_PACKAGE@.queue.web.servlet.FormServlet</servlet-class>
-	</servlet>
 
-	<servlet>
-		<servlet-name>saveResponseServlet</servlet-name>
-		<servlet-class>@MODULE_PACKAGE@.queue.web.servlet.SaveResponseServlet</servlet-class>
-	</servlet>
-	
-	<servlet>
-		<servlet-name>conceptSearchServlet</servlet-name>
-		<servlet-class>@MODULE_PACKAGE@.queue.web.servlet.ConceptSearchServlet</servlet-class>
-	</servlet>
-	
-	<servlet>
-		<servlet-name>permissionsServlet</servlet-name>
-		<servlet-class>@MODULE_PACKAGE@.queue.web.servlet.PermissionsServlet</servlet-class>
-	</servlet>
-	
-	<servlet>
-		<servlet-name>lexiconServlet</servlet-name>
-		<servlet-class>@MODULE_PACKAGE@.queue.web.servlet.LexiconServlet</servlet-class>
-	</servlet>
-	
-	<servlet>
-		<servlet-name>retakeServlet</servlet-name>
-		<servlet-class>@MODULE_PACKAGE@.queue.web.servlet.RetakeServlet</servlet-class>
-	</servlet>
+
+    <servlet>
+        <servlet-name>queueServlet</servlet-name>
+        <servlet-class>@MODULE_PACKAGE@.queue.web.servlet.QueueServlet</servlet-class>
+    </servlet>
+    
+    <servlet>
+        <servlet-name>conceptSearchServlet</servlet-name>
+        <servlet-class>@MODULE_PACKAGE@.queue.web.servlet.ConceptSearchServlet</servlet-class>
+    </servlet>
+    
+    <servlet>
+        <servlet-name>lexiconServlet</servlet-name>
+        <servlet-class>@MODULE_PACKAGE@.queue.web.servlet.LexiconServlet</servlet-class>
+    </servlet>
 
 	<servlet>
         <servlet-name>encounterServlet</servlet-name>
@@ -201,12 +177,37 @@
         <servlet-name>complexObsServlet</servlet-name>
         <servlet-class>@MODULE_PACKAGE@.mediaviewer.web.servlet.ComplexObsServlet</servlet-class>
     </servlet>
+
+    <servlet>
+        <servlet-name>formServlet</servlet-name>
+        <servlet-class>@MODULE_PACKAGE@.queue.web.servlet.FormServlet</servlet-class>
+    </servlet>
+
+    <!-- Version 1.x servlets -->
+    <servlet>
+        <servlet-name>uploadServlet</servlet-name>
+        <servlet-class>@MODULE_PACKAGE@.queue.web.v1.servlet.UploadServlet</servlet-class>
+    </servlet>
     
     <servlet>
         <servlet-name>uploadToEncounterServlet</servlet-name>
-        <servlet-class>@MODULE_PACKAGE@.mediaviewer.web.servlet.UploadToEncounterServlet</servlet-class>
+        <servlet-class>@MODULE_PACKAGE@.mediaviewer.web.v1.servlet.UploadToEncounterServlet</servlet-class>
+    </servlet>
+    
+    <servlet>
+        <servlet-name>permissionsServlet</servlet-name>
+        <servlet-class>@MODULE_PACKAGE@.queue.web.v1.servlet.PermissionsServlet</servlet-class>
     </servlet>
 
+    <servlet>
+        <servlet-name>saveResponseServlet</servlet-name>
+        <servlet-class>@MODULE_PACKAGE@.queue.web.v1.servlet.SaveResponseServlet</servlet-class>
+    </servlet>
+    
+    <servlet>
+        <servlet-name>retakeServlet</servlet-name>
+        <servlet-class>@MODULE_PACKAGE@.queue.web.v1.servlet.RetakeServlet</servlet-class>
+    </servlet>
 	<!-- Internationalization -->
 	<!-- All message codes should start with moduleId.* -->
 	<messages>
@@ -216,7 +217,7 @@
 	<!-- /Internationalization -->
 	
 	<mappingFiles>
-		sana.hbm.xml
+		queue_item.hbm.xml
 		date_items.hbm.xml
 	</mappingFiles>
 </module>
