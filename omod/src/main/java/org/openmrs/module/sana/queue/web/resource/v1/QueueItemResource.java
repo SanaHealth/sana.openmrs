@@ -1,28 +1,14 @@
 package org.openmrs.module.sana.queue.web.resource.v1;
 
-
-import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openmrs.User;
 import org.openmrs.annotation.Handler;
 import org.openmrs.api.context.Context;
-import org.openmrs.module.sana.ModuleConstants;
-import org.openmrs.module.sana.ModuleConstants.Property;
 import org.openmrs.module.sana.queue.DateItems;
-import org.openmrs.module.sana.queue.PatientResource;
 import org.openmrs.module.sana.queue.QueueItem;
-import org.openmrs.module.sana.queue.QueueItemJson;
 import org.openmrs.module.sana.queue.QueueItemService;
-import org.openmrs.module.sana.queue.QueueItemStatus;
-import org.openmrs.module.sana.queue.QueueItemXml;
 import org.openmrs.module.webservices.rest.web.RequestContext;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.annotation.Resource;
@@ -33,7 +19,6 @@ import org.openmrs.module.webservices.rest.web.resource.api.PageableResult;
 import org.openmrs.module.webservices.rest.web.resource.impl.DataDelegatingCrudResource;
 import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceDescription;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
-import org.springframework.web.servlet.ModelAndView;
 
 @Resource("queueitem")
 @Handler(supports = { QueueItem.class }, order=0)
