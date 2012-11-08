@@ -1,4 +1,4 @@
-package org.openmrs.module.sana.queue.web.servlet;
+package org.openmrs.module.sana.queue.web.v1.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -248,7 +248,6 @@ public class UploadServlet extends HttpServlet {
 				throw new ServletException(ex);
 			}
 
-    	
 			// This constructs the queue item and saves it
 			queueItem = makeQueueItem(encounter, patient, message);
 			if(log.isDebugEnabled())

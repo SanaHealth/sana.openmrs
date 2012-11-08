@@ -1,4 +1,4 @@
-package org.openmrs.module.sana.queue.web.servlet;
+package org.openmrs.module.sana.queue.web.v1.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -113,38 +113,47 @@ public class PermissionsServlet extends HttpServlet {
     	}
     }
     
+    /**
+     * Provides a POST style log in type mechanism for the permissionsServlet
+     */
     @Override
     protected void doPost(HttpServletRequest request, 
     		HttpServletResponse response) throws ServletException, IOException 
     {  
     	String username = null;
     	String password = null;
+    	String message = "";
     	try{
         	username = request.getParameter("username");
         	password = request.getParameter("password");
     		Context.authenticate(username, password);
     		User user = Context.getAuthenticatedUser();
-    		//Context.becomeUser(user.getSystemId());
-    		//Context.isAuthenticated();
+    		if(log.isDebugEnabled())
+    			log.debug("Authenticated: " + user.getId());
     		String managePrivilege = Privilege.MANAGE_QUEUE;
     	
     		if(user.hasPrivilege(managePrivilege)){
-    			log.info("User " + user.getGivenName() + " " 
-    				+ user.getFamilyName() + "does have privilege");
-    			succeed(request, response, "User has Manage Sana Queue privileges");
+    			message = "User has Manage Sana Queue privileges";
+        		if(log.isDebugEnabled())
+        			log.debug(message + ": " + user.getId());
+    			succeed(request, response, message);
     		} else{
-    			log.info("User " + user.getGivenName() + " " 
-    				+ user.getFamilyName() + "does NOT have privilege");
-    			fail(request, response, "User " + user.getGivenName() + " " 
-    				+ user.getFamilyName() 
-    				+ "does not have Manage Sana Queue Privileges");
+    			message = "User does not have Manage Sana Queue Privileges";
+        		if(log.isDebugEnabled())
+        			log.debug(message + ": " + user.getId());
+    			fail(request, response, message);
     		}
     	} catch (ContextAuthenticationException e){
-    		log.error("Authentication Failure. username: " + username);
+    		message = "Authentication Failure. username: " + username;
+    		log.error(message,e);
+			fail(request, response, message);
     	} catch (Exception e){
-    		log.error("Authentication Failure. error: " + e.toString());
+    		message = "Authentication Failure. error: " + e.getMessage();
+    		log.error(message, e);
+			fail(request, response, message);
     	}
     }
+    
 }
 
 

@@ -154,7 +154,7 @@
 	
 	<servlet>
 		<servlet-name>uploadServlet</servlet-name>
-		<servlet-class>@MODULE_PACKAGE@.queue.web.servlet.UploadServlet</servlet-class>
+		<servlet-class>@MODULE_PACKAGE@.queue.web.v1.servlet.UploadServlet</servlet-class>
 	</servlet>
 		 
 	<servlet>

@@ -11,7 +11,7 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.sana.queue.web.servlet;
+package org.openmrs.module.sana.queue.web.v1.servlet;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
