@@ -37,9 +37,10 @@ public class AdminList extends AdministrationSectionExt {
         map.put("module/"+Module.ID+"/queue/v1/queue.form", Module.ID+".view");
         map.put("module/"+Module.ID+"/lexicon/lexicon.form", Module.ID+".lexicon");
         map.put("module/"+Module.ID+"/mds/logs.form", Module.ID+".mdsLog");
+        map.put("module/"+Module.ID+"/mds/sxml.form", Module.ID+".mdsSXML");
         //map.put("module/"+Module.ID+"/mds/admin.form", Module.ID+".mdsAdmin");
-    	map.put("module/"+Module.ID+"/mediaviewer/mediaViewer.form",
-    					Module.ID+".admin_page_module_name");
+    	//map.put("module/"+Module.ID+"/mediaviewer/mediaViewer.form",
+    	//				Module.ID+".admin_page_module_name");
         return map;
     }
 }

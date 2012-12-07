@@ -37,4 +37,17 @@ public class MDSAdminController {
 	public String showLogForm(ModelMap map){
 		return LOG_FORM_VIEW;
 	}
+	
+	/** Success form view name */
+	private final String SXML_FORM_VIEW = "/module/sana/mds/sxml";
+	
+	/**
+	 * Initially called after the formBackingObject method to get the landing form name  
+	 * @return String form view name
+	 */
+	@RequestMapping(method = RequestMethod.GET, value="sxml")
+	public String showSXMLForm(ModelMap map){
+		return SXML_FORM_VIEW;
+	}
+	
 }
