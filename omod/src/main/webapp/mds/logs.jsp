@@ -11,6 +11,7 @@
 //Functions for Onclick methods
     var page = 1; 
     var auto = 0;
+    var limit = 20;
     var logurl = "${pageContext.request.scheme}://" +
 		      "${pageContext.request.localName}" +
 		      ":${pageContext.request.serverPort}" +
@@ -25,6 +26,13 @@
     	$('#logs').load(loglisturl);
 	    document.getElementById('status').innerHTML = new Date();
     }
+    
+    function getLogPage(p){
+        page = p;
+        $('#logs').load(loglisturl + "?page=" + page +"&limit=" + limit );
+        document.getElementById('status').innerHTML = new Date();
+    }
+    
     function openLogsInNewWindow(){
         window.open(logurl);
     }
@@ -155,6 +163,6 @@ td.selectp
     value="Open Logs In New Window"/>
 </div>
 <script type="text/javascript">
-    window.onLoad = getLogPage(1) 
+    window.onLoad = getLogPage(1);
 </script>
 <%@ include file="/WEB-INF/template/footer.jsp" %>
