@@ -79,7 +79,7 @@ public class ConceptSearchServlet extends HttpServlet {
             	return;
             }
             
-            log.info("source found:" + cSource.toString() + "\n");
+            log.debug("source found:" + cSource.toString() + "\n");
         }
         
         //Get concept service
