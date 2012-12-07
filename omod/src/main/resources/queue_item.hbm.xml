@@ -4,11 +4,12 @@
     "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
 
 <hibernate-mapping package="@MODULE_PACKAGE@">
+    <!--
 	<class name="org.openmrs.module.sana.queue.QueueItem" table="sana_queue_item">
+    --> 
 	<!-- use moca_queue_item for backwards compatibility -->
-	<!--
 	<class name="org.openmrs.module.sana.queue.QueueItem" table="moca_queue_item">
-	-->	
+
 		<id name="queueItemId" type="int" column="id">
 			<generator class="native" />
 		</id>
