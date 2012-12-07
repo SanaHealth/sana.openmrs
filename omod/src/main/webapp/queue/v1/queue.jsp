@@ -473,7 +473,7 @@
 							<c:forEach var="obs" items="${item.encounter.obs }">
 							<c:if test="${obs.complex }">
 							<li>
-								<a href="${pageContext.request.contextPath}/moduleServlet/sana/mediaviewer/complexObsServlet?obsId=${obs.obsId}&view=SHOW&viewType=DOWNLOAD">										
+								<a href="${pageContext.request.contextPath}/moduleServlet/sana/complexObsServlet?obsId=${obs.obsId}&view=SHOW&viewType=DOWNLOAD">										
 									<c:choose>
 										<c:when test="${obs.valueText=='SOUND'}">
 										    <img border="0" src="${pageContext.request.contextPath }/moduleResources/sana/audioThumbnail.png"/>
@@ -485,7 +485,7 @@
 										    <img border="0" src="${pageContext.request.contextPath }/moduleResources/sana/binaryThumbnail.png"/>
 										</c:when>
 										<c:otherwise>
-											<img src="${pageContext.request.contextPath }/moduleServlet/sana/mediaviewer/complexObsServlet?obsId=${obs.obsId }&view=VIEW_THUMBNAIL"/>
+											<img src="${pageContext.request.contextPath }/moduleServlet/sana/complexObsServlet?obsId=${obs.obsId }&view=VIEW_THUMBNAIL"/>
 										</c:otherwise>
 									</c:choose>
 								</a>
