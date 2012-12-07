@@ -44,6 +44,7 @@
     function showDetail(id) {
         jQuery("#log-"+id+"-detail").show();
     }
+    
     function json_update(msg, callback) {
         id = msg['id'];
         data = msg['data'];
@@ -132,12 +133,28 @@ td.selectp
         </td>   
     </tr>
 </table>
+<table width="100%">
+    <tbody>
+        <tr>
+            <td class="pagenav">Go To Page:
+                <select onchange="getLogPage(value)">
+                    <option>1</option>
+                    <option>2</option>
+                    <option>3</option>
+                </select>
+            </td>
+        </tr>
+    </tbody>
+</table>
 <div id="logs">
-This will display the mds logs in-line(Beta feature).
+...loading
 </div>
 <div id="dbg">
 <p>Press the following button to show the mds logs in a new window.</p>
 <input id="logButton" onClick="openLogsInNewWindow()" type="button" 
     value="Open Logs In New Window"/>
 </div>
+<script type="text/javascript">
+    window.onLoad = getLogPage(1) 
+</script>
 <%@ include file="/WEB-INF/template/footer.jsp" %>
