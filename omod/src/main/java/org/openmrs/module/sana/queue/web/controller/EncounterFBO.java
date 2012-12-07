@@ -84,7 +84,7 @@ public class EncounterFBO {
 			if(!o.isComplex())
 			{		
 				conceptName = o.getConcept().getDisplayString();
-				log.error(conceptName);
+				log.debug(conceptName);
 				
 				//Case is Deferred
 				if(q.getStatus().equals(QueueItemStatus.DEFERRED))
@@ -182,7 +182,7 @@ public class EncounterFBO {
 				existingDiagnoses += "<br><br><b>Diagnosis: </b>" + diagnoses + 
 								 	 "<br><br><b>Plan: </b>" + treatment + comments;
 
-			log.info("Existing Diagnoses: " + existingDiagnoses);
+			log.debug("Existing Diagnoses: " + existingDiagnoses);
 		}
 
 		//Set obs map
