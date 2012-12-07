@@ -276,102 +276,46 @@ public class SaveResponseServlet extends HttpServlet {
         
         //Get phone number and construct SMS message and email message
         String patientId = e.getPatient().getPatientIdentifier().toString();
-        SimpleDateFormat dateFormat = new SimpleDateFormat(
-        		"EEE MMM dd yyyy HH:mm zzz");
+        
    	 	
         // Get the user's preferred notification
 		String notificationPref = e.getCreator().getUserProperty(
 				"notification");
-    	//Send SMS
-		User user = q.getEncounter().getCreator();
-		String smsNumber = user.getUserProperty("Contact Phone");
-    	try {
-        	String SMSmessage = "DX: " + diagnosisList + "; Plan: " + plan;
-	    	log.debug(": sms -> " +
-	    			"patient: " + patientId + " msg: " + SMSmessage);
-    		boolean sms = MDSNotificationReply.sendSMS(smsNumber, 
-    				q.getCaseIdentifier(), patientId, SMSmessage);
-
-	    	log.debug(": sms -> " +
-	    			"success: " + sms);
-    	}
-    	catch (ConnectException err) {
-			log.error("Couldn't connect to notification server " 
-					+ Context.getAdministrationService().getGlobalProperty(
-							Property.MDS_URI));
-			err.printStackTrace();
-			fail(output, "Failed to send SMS message." + err.getMessage());
-		} catch (Exception err) {
-			log.error("Unable to send notification", err);
-			err.printStackTrace();
-			fail(output, "Failed to send SMS message." + err.getMessage());
-		}
     	 
-    	// TODO SMS or email not both
-		//Send Email
+    	// TODO Come up with a better way to trigger notification type
+		//Send sms
+		try{
+			boolean sms = sendSMS(q, diagnosisList, plan, patientId);
+		} catch (ConnectException err) {
+    		log.error("Couldn't connect to notification server " 
+    			+ Context.getAdministrationService().getGlobalProperty(Property.MDS_URI));
+    		fail(output, "Failed to send SMS message." + err.getMessage());
+    	} catch (Exception err) {
+    		log.error("Unable to send notification", err);
+    		fail(output, "Failed to send SMS message." + err.getMessage());
+    	}
+		
     	try{
 			//If person who uploaded the case has an email, then email the 
-    		// specialist response to them
-    		//String uploaderEmailAddress = e.getCreator().getPerson()
-    		// .getAttribute("Contact Email").getValue();
-    		String uploaderEmailAddress = null;
-    		if(notificationPref.equalsIgnoreCase("email")){
-    			uploaderEmailAddress = e.getCreator().getUserProperty(
-    					"notificationAddress", "noaddress@noserver.com");
-
-    	    	log.debug(": email -> " +
-    	    			"uploaderEmailAddress: " +  uploaderEmailAddress);
-    		}
-    		if(uploaderEmailAddress != null && !uploaderEmailAddress.equals("")){
-				//Create a list of email addresses you want the official 
-    			// specialist response to be sent to
-    	    	String emailMessage = "Date of Encounter: " 
-    	    		+ dateFormat.format(q.getDateCreated()) 
-    	    		+"\nReferring Clinician: " + q.getCreator().getGivenName() 
-    	    			+" " + q.getCreator().getFamilyName() 
-    	    		+"\nPatient ID: " + patientId  
-    	    		+"\nName: " + q.getEncounter().getPatient().getGivenName() + " "  
-    	    			+q.getEncounter().getPatient().getFamilyName() 
-    	    		+"\nAge: " + q.getEncounter().getPatient().getAge().toString() 
-    	    		+"\nSite: " + e.getLocation().getDisplayString() 
-    	    		+"\n\nDate of Specialist Consult: " 
-    	    			+dateFormat.format(q.getDateChanged()) 
-    	    		+"\nSpecialist: " 
-    	    			+Context.getAuthenticatedUser().getGivenName() + " "  
-    	    			+Context.getAuthenticatedUser().getFamilyName() 
-    	    		+"\nUrgency Level: " + doctorUrgency 
-    	    		+"\nDiagnosis: " + diagnosisList 
-    	    		+"\nPlan: " + plan;
-    	    	log.debug(": email -> " +
-    	    			"patient: " + patientId + " msg: " + emailMessage);
-    			String subject = "Referral Response for Patient " + patientId;
-	    		List<String> emailAddr = new ArrayList<String>();
-	    		emailAddr.add(uploaderEmailAddress);
-	    		
-	    		Gson gson = new Gson();
-	    		Type listType = new TypeToken<ArrayList<String>>() {}.getType();
-	    		String emailAddresses = gson.toJson(emailAddr, listType);
-	    		
-	    		boolean email = MDSNotificationReply.sendEmail(emailAddresses, 
-	    				q.getCaseIdentifier(), patientId, subject,emailMessage);
-
-    	    	log.debug(": email -> " +
-    	    			"success: " + email);
-    		}
-		}
-    	catch (ConnectException err) {
+    		// specialist response to them if they indicated so in their user
+    		// profile
+			if(notificationPref.equalsIgnoreCase("email")){
+				boolean email = sendMail(q, diagnosisList, plan, patientId, doctorUrgency);	
+			}
+		} catch (ConnectException err) {
 			log.error("Couldn't connect to email notification server " 
 					+ Context.getAdministrationService().getGlobalProperty(
 							Property.EMAIL_URL));
 		} catch (Exception err) {
-			err.printStackTrace();
+			log.error("Email failed: " + err.getMessage());
 			fail(output,"Failed to send email message " + err.getMessage());
 		}
     	response.sendRedirect(request.getContextPath() 
 				+  "/module/sana/queue/v1/queue.form");
-		//response.sendRedirect(request.getContextPath() 
-		//		+  "/admin/encounters/encounter.form?encounterId="+encounterId);
     }
+    
+    
+    
     
     @Override
     protected void doGet(HttpServletRequest request, 
@@ -380,5 +324,85 @@ public class SaveResponseServlet extends HttpServlet {
     	response.sendRedirect(request.getContextPath() 
 				+  "/module/sana/queue/v1/queue.htm");
     	
+    }
+    
+    /**
+     * Formats the SMS message
+     */
+    private boolean sendSMS(QueueItem q, String diagnosisList, String plan,
+    		String patientId) throws Exception
+    {
+		//TODO move this to a method
+    	//Send SMS
+		User user = q.getEncounter().getCreator();
+		String smsNumber = user.getUserProperty("Contact Phone");
+		String SMSmessage = "DX: " + diagnosisList + "; Plan: " + plan;
+		log.debug(": sms -> " +
+				"patient: " + patientId + " msg: " + SMSmessage);
+		boolean sms = MDSNotificationReply.sendSMS(smsNumber, 
+				q.getCaseIdentifier(), patientId, SMSmessage);
+		log.debug(": sms sent -> "+ smsNumber + ", success: " + sms);
+		return sms;
+    }
+    
+    /**
+     * Formats and sends and email message
+     */
+    private boolean sendMail(QueueItem q, String diagnosisList, String plan,
+    		String patientId, String doctorUrgency) throws Exception
+    {
+		//If person who uploaded the case has an email, then email the 
+		// specialist response to them
+		//String uploaderEmailAddress = e.getCreator().getPerson()
+		// 		.getAttribute("Contact Email").getValue();
+    	boolean email = false;
+		String uploaderEmailAddress = null;
+		Encounter e = q.getEncounter();
+		uploaderEmailAddress = e.getCreator().getUserProperty(
+					"notificationAddress", "noaddress@noserver.com");
+		log.debug(": email -> " +
+	    			"uploaderEmailAddress: " +  uploaderEmailAddress);
+		if(uploaderEmailAddress != null && !uploaderEmailAddress.equals("")){
+			// TODO We shouldn't be hard coding this
+			SimpleDateFormat dateFormat = new SimpleDateFormat(
+	        		"EEE MMM dd yyyy HH:mm zzz");
+			
+			//Create a list of email addresses you want the official 
+			// specialist response to be sent to
+	    	String emailMessage = "Date of Encounter: " 
+	    		+ dateFormat.format(q.getDateCreated()) 
+	    		+"\nReferring Clinician: " + q.getCreator().getGivenName() 
+	    			+" " + q.getCreator().getFamilyName() 
+	    		+"\nPatient ID: " + patientId  
+	    		+"\nName: " + q.getEncounter().getPatient().getGivenName() + " "  
+	    			+q.getEncounter().getPatient().getFamilyName() 
+	    		+"\nAge: " + q.getEncounter().getPatient().getAge().toString() 
+	    		+"\nSite: " + e.getLocation().getDisplayString() 
+	    		+"\n\nDate of Specialist Consult: " 
+	    			+dateFormat.format(q.getDateChanged()) 
+	    		+"\nSpecialist: " 
+	    			+Context.getAuthenticatedUser().getGivenName() + " "  
+	    			+Context.getAuthenticatedUser().getFamilyName() 
+	    		+"\nUrgency Level: " + doctorUrgency 
+	    		+"\nDiagnosis: " + diagnosisList 
+	    		+"\nPlan: " + plan;
+	    	log.debug(": email -> " +
+	    			"patient: " + patientId + " msg: " + emailMessage);
+			String subject = "Referral Response for Patient " + patientId;
+    		List<String> emailAddr = new ArrayList<String>();
+    		emailAddr.add(uploaderEmailAddress);
+    		
+    		Gson gson = new Gson();
+    		Type listType = new TypeToken<ArrayList<String>>() {}.getType();
+    		String emailAddresses = gson.toJson(emailAddr, listType);
+    		
+    		email = MDSNotificationReply.sendEmail(emailAddresses, 
+    				q.getCaseIdentifier(), patientId, subject,emailMessage);
+
+		} else {
+			log.warn("Null email address");
+		}
+    	log.debug(": email -> " + "success: " + email);
+		return email;
     }
 }
