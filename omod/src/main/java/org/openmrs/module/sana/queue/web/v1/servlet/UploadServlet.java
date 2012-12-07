@@ -665,64 +665,10 @@ public class UploadServlet extends HttpServlet {
         if (c != null){
         	log.debug("Found exact match!");
         	return c;
+        } else {
+        	throw new NullPointerException("Concept not found");
         }
-        // Start requiring exact match
-        log.debug("No exact match found:" + name);
-		// Get concepts matching these words in this locale
-        Locale defaultLocale = Context.getLocale();
-		List<ConceptWord> conceptWords = new Vector<ConceptWord>();
-		conceptWords.addAll(cs.getConceptWords(name, defaultLocale));
-		log.debug("Found Concept words with matching name:" 
-					+ conceptWords.size());
-		if (conceptWords.size() > 1)
-			log.warn("Multiple concepts with the same name!" + name);
-		
-		
-		//TODO Remove this?
-		// As of OpenMRS > 1.7, duplicate concept names were not allowed
-		// so this can probably be removed.
-		// Use the description field to uniquely match
-		for(ConceptWord cw : conceptWords){
-			try {
-				log.debug("Sana.UploadServlet.getOrCreateConcept():Testing: (" 
-						+name + ", " + question + " ) " 
-						+ " against ConceptWord:  (" + cw.getConceptName() + ", " 
-						+ cw.getConcept().getDescription().getDescription() 
-						+ " ) ");
-				// stop checking if there is a match
-				if(cw.getConcept().getDescription().getDescription()
-						.equals(question))
-				{
-					log.debug("Sana.UploadServlet.Concept Matched: (" + name + ", " 
-							+ question + " ) id: " + cw.getConcept().getId());
-					c = cw.getConcept();
-					break;
-				}
-			} catch(Exception err){
-				log.debug("Sana.UploadServlet.getOrCreateConcept(): Skipping concept " 
-						+ name + " because of error: " + err.toString());
-				err.printStackTrace();
-			}
-		}
-		
-		//c = cs.getConceptByName(conceptName);
-		// If we get a null concept here we need to see if we can create it
-		if(c == null){
-			String msg = String.format("Concept Undefined: (%s, %s)", 
-					name, question);
-			log.error(msg);
-			boolean allowCreate = Boolean.valueOf(
-				Context.getAdministrationService().getGlobalProperty(
-							ModuleConstants.PROP_ALLOW_CONCEPT_CREATE));
-			if(allowCreate){
-				log.debug("Trying to create Concept...Bad");
-				c = createAndGetConcept(name, type, question);
-			} else
-				throw new NullPointerException(msg);
-		}
-		
-		log.debug("Concept found: " + c.getDisplayString());
-        return c;
+        
     }
     
     /** Convenience wrapper */
@@ -755,10 +701,8 @@ public class UploadServlet extends HttpServlet {
         o.setValueText(q.answer);
         if(f == null)
         	o.setValueText(q.answer);
-        else
+        else {
         	o.setValueText(q.type);
-        
-        if(f != null) {
         	log.debug("Sana.UploadServlet.makeObs: file:" + f.getName());
             ComplexData cd = new ComplexData(f.getName(), f.getInputStream());
             o.setComplexData(cd);
