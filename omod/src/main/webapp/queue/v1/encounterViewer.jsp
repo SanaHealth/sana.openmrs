@@ -9,10 +9,7 @@
 
 function send(){
     var frm = document.getElementById("review");
-    
-    
     frm.submit();
-	
 }
 
 function backToQueue() {
@@ -86,12 +83,11 @@ function retake() {
   if(msg != null){
   var queueID = document.getElementById('queueItemId').value;
   jQuery.post("${pageContext.request.contextPath}/moduleServlet/sana/retakeServlet",
-             {'msg':msg,'queueItemId':queueID},
+             {'msg':msg, 'queueItemId':queueID},
              function(data) {
                 if(data == "OK") {
                  document.location.href= "queueDeferred.form"
-                }
-                else {
+                } else {
                  alert("Error: Could not send message. Check OpenMRS Configuration settings");
                 }
              });
@@ -112,11 +108,10 @@ width:100%;
 .leftBox {
   border: 1px solid #6D9BC5;
   width: 28%;
-  min-height: 512px;
+  height: 100%;
   float: left;
   background-color: #C6D9F1;
   overflow:auto;
-  overflow-x: hidden;
   scrollbar-base-color: transparent;
   scrollbar-arrow-color: transparent;
 }
@@ -129,8 +124,8 @@ width:100%;
 }
 
 .bigContainer{
+  min-height: 584px;
   width: 100%;
-  height: 100%;
   position: relative;
 }
 
@@ -284,12 +279,12 @@ input.collapseButton {
 				<div id="horizBar2" class="indented"><hr align=left noshade size=4 width=90% style="color: white;"></div>
 				<p>
 					<spring:message code="sana.diagnosis_urgency" />: <br>
-					<input type="radio" name="Urgency" value="Emergency" /> <spring:message code="sana.emergency" /><br>
-					<input type="radio" name="Urgency" value="Urgent" /> <spring:message code="sana.urgent" /><br>
-					<input type="radio" name="Urgency" value="Non-Urgent" /> <spring:message code="sana.non_urgent" /><br>
+					<input type="radio" name="Urgency" value="Emergency" required="True"/> <spring:message code="sana.emergency" /><br>
+					<input type="radio" name="Urgency" value="Urgent" required="True"/> <spring:message code="sana.urgent" /><br>
+					<input type="radio" name="Urgency" value="Non-Urgent" required="True"/> <spring:message code="sana.non_urgent" /><br>
 					<br/>
 					<spring:message code="sana.treatment" />: <br>
-					<textarea wrap="virtual" class="t1" name="Treatment" rows=3></textarea><br><br>	
+					<textarea wrap="virtual" class="t1" name="Treatment" rows=3 required="True"></textarea><br><br>	
 					<spring:message code="sana.comments" />: <br>
 					<textarea wrap="virtual" class="t1" name="Comments" rows=3></textarea><br><br>
 					<input type="submit" value="Send" class="btn"/>
@@ -298,21 +293,23 @@ input.collapseButton {
 				</p>
 			</form>
 	 	</div>
-	 	
 	</div>
 	
 	<div class="rightBox" id="rightContainer">
 		<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"
-					id="TestViewer" width="100%" height="100%"
+					id="TestViewer" 
+					width="100%" height="100%"
 					codebase="http://fpdownload.macromedia.com/get/flashplayer/current/swflash.cab">
-					<param name="movie" value="${pageContext.request.contextPath}/moduleResources/sana/MediaFileViewer.swf" />
+					<param name="movie" value="${pageContext.request.contextPath}/moduleResources/sana/MediaFileViewer2.swf" />
 					<param name="quality" value="high" />
 					<param name="bgcolor" value="#869ca7" />
 					<param name="allowScriptAccess" value="always" />
 					<param name="allowFullScreen" value="true" />
 					<param name="FlashVars" value="patientFirstName=${encounter.queueItem.patient.givenName}&patientLastName=${encounter.queueItem.patient.familyName}&dateUploaded=${encounter.queueItem.dateUploaded}&encounterID=${encounter.queueItem.encounterId}&contextPath=${pageContext.request.contextPath}">
-					<embed src="${pageContext.request.contextPath}/moduleResources/sana/MediaFileViewer.swf" quality="high" bgcolor="#869ca7"
-						width="100%" height="100%" name="TestViewer" align="middle"
+					<embed src="${pageContext.request.contextPath}/moduleResources/sana/MediaFileViewer2.swf" quality="high" bgcolor="#869ca7"
+						width="100%" height="100%" 
+						name="TestViewer" 
+						align="middle"
 						play="true"
 						loop="false"
 						quality="high"
@@ -325,6 +322,8 @@ input.collapseButton {
 			</object>
 	</div>
 </div>
+<div style="clear: both;"></div>
+<%@ include file="/WEB-INF/template/footer.jsp"%>
 
 
 
