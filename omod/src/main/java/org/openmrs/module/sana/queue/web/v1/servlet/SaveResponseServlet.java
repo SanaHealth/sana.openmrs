@@ -337,11 +337,10 @@ public class SaveResponseServlet extends HttpServlet {
 		User user = q.getEncounter().getCreator();
 		String smsNumber = user.getUserProperty("Contact Phone");
 		String SMSmessage = "DX: " + diagnosisList + "; Plan: " + plan;
-		log.debug(": sms -> " +
-				"patient: " + patientId + " msg: " + SMSmessage);
+		log.debug("Sending sms -> " + smsNumber);
 		boolean sms = MDSNotificationReply.sendSMS(smsNumber, 
 				q.getCaseIdentifier(), patientId, SMSmessage);
-		log.debug(": sms sent -> "+ smsNumber + ", success: " + sms);
+		log.debug("sms sent -> " + smsNumber + ", success: " + sms);
 		return sms;
     }
     
