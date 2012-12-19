@@ -191,7 +191,7 @@
     
     <servlet>
         <servlet-name>uploadToEncounterServlet</servlet-name>
-        <servlet-class>@MODULE_PACKAGE@.mediaviewer.web.v1.servlet.UploadToEncounterServlet</servlet-class>
+        <servlet-class>@MODULE_PACKAGE@.mediaviewer.web.servlet.UploadToEncounterServlet</servlet-class>
     </servlet>
     
     <servlet>
