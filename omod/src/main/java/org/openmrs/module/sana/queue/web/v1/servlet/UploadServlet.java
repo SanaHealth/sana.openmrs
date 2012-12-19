@@ -513,6 +513,9 @@ public class UploadServlet extends HttpServlet {
         
     	// Create the observations
         for(MDSQuestion q : message.questions) {
+        	// Skip all null answers.
+        	if((q.answer == null) || (q.answer.compareTo("") == 0))
+        		continue;
         	Obs obs = null;
             Concept c = idMap.get(q.id);
             
