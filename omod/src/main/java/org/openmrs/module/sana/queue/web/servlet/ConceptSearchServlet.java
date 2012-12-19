@@ -45,7 +45,7 @@ public class ConceptSearchServlet extends HttpServlet {
 
         if(conceptSourceName == null || conceptSourceName.equals(""))
         {
-        	log.error("Invalid concept source name, can't perform search");
+        	log.warn("Invalid concept source name, can't perform search");
         	return;
         }
         
@@ -75,7 +75,7 @@ public class ConceptSearchServlet extends HttpServlet {
             
             if(cSource == null)
             {
-            	log.error("Invalid concept source object, can't perform search");
+            	log.warn("Invalid concept source object, can't perform search");
             	return;
             }
             
@@ -92,7 +92,7 @@ public class ConceptSearchServlet extends HttpServlet {
 		
 		//Perform the search
 		conceptWords.addAll(cs.getConceptWords(searchPhrase, defaultLocale));
-		log.error("cwords:" + conceptWords.toString());
+		log.debug("cwords:" + conceptWords.toString());
        
 		//Create a list of the word strings
 		Iterator<ConceptMap> listMappings;
@@ -105,10 +105,10 @@ public class ConceptSearchServlet extends HttpServlet {
 				log.info("word:" + cword.toString());
 				listMappings = cword.getConcept().getConceptMappings().iterator();
 				if(listMappings.hasNext()){
-					log.error("a mapping");
+					log.debug("a mapping");
 			        
 					mapping = listMappings.next();
-					log.error("mapping" + mapping.toString());
+					log.debug("mapping" + mapping.toString());
 			        
 					if(mapping.getSource().equals(cSource)){
 						//Get SNOMED ID associated with this concept
@@ -127,7 +127,7 @@ public class ConceptSearchServlet extends HttpServlet {
 			}
 			
 		}
-		log.error("words" + words);
+		log.debug("words" + words);
 		writer.print(words);
     }
     
