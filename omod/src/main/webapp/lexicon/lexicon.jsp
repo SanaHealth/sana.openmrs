@@ -154,6 +154,11 @@
                 <td><spring:message code='sana.column_concept_class'/>: </td>
                 <td><input type="text" id="columnConceptClass1" name="columnConceptClass" size="40"/></td>
             </tr>
+            
+            <tr>
+                <td><spring:message code='sana.column_concept_description'/>: </td>
+                <td><input type="text" id="columnConceptDescription1" name="columnConceptDescription" size="40"/></td>
+            </tr>
         </table>
         <div id="addVocabButton" style="margin-top: 5px;margin-left:5px;">       
             <input type="submit" value="Submit"/>
@@ -213,6 +218,10 @@
             <tr>
                 <td><spring:message code='sana.column_concept_class'/>: </td>
                 <td><input type="text" id="columnConceptClass2" name="columnConceptClass" size="40"/></td>
+            </tr>
+            <tr>
+                <td><spring:message code='sana.column_concept_description'/>: </td>
+                <td><input type="text" id="columnConceptDescription2" name="columnConceptDescription" size="40"/></td>
             </tr>
         </table>
         <div id="updateVocabButton" style="margin-top: 5px;margin-left:5px;">       
