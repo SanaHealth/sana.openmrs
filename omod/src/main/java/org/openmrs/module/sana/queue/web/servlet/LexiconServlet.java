@@ -153,13 +153,13 @@ public class LexiconServlet extends HttpServlet {
         int columnName = 0;
         int columnType = 0;
         int columnDescription = 0;
-        if(colIdNum != null && !colIdNum.equals(""))
+        if(StringUtils.hasText(colIdNum))
         	columnIDNum = Integer.parseInt(colIdNum);
-        if(colConceptName != null && !colConceptName.equals(""))
+        if(StringUtils.hasText(colConceptName)) 
         	columnName = Integer.parseInt(colConceptName);
-        if(colConceptClass != null && !colConceptClass.equals(""))
+        if(StringUtils.hasText(colConceptClass))
         	columnType = Integer.parseInt(colConceptClass);
-        if(colConceptDescription != null && !colConceptDescription.equals(""))
+        if(StringUtils.hasText(colConceptDescription))
         	columnDescription = Integer.parseInt(colConceptDescription);
         
         //Get uploaded file name
