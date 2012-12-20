@@ -129,6 +129,12 @@
                 
             </tr>
             <tr>
+                <td><spring:message code='sana.name_concept_source_code'/>: </td>
+                <td><input type="text" id="conceptSourceCode1" name="conceptSourceCode" size="40"/>
+                <span class="error" id="conceptSourceCode1Error" style="display:none">Enter concept source name</span></td>
+                
+            </tr>
+            <tr>
                 <td><spring:message code='sana.description_concept_source'/>: </td>
                 <td><input type="text" id="conceptSourceDescription1" name="conceptSourceDescription" size="40"/>
                 <span class="error" id="conceptSourceDescription1Error" style="display:none">Enter description</span></td>
