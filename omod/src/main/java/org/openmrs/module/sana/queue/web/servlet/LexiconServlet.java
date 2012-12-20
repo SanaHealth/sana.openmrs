@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -34,20 +35,19 @@ import org.openmrs.ConceptDatatype;
 import org.openmrs.ConceptDescription;
 import org.openmrs.ConceptMap;
 import org.openmrs.ConceptName;
+import org.openmrs.ConceptNameTag;
 import org.openmrs.ConceptSource;
 import org.openmrs.ConceptWord;
-import org.openmrs.Encounter;
-import org.openmrs.Location;
-import org.openmrs.Obs;
-import org.openmrs.Patient;
-import org.openmrs.User;
-import org.openmrs.api.EncounterService;
-import org.openmrs.api.PatientService;
+import org.openmrs.api.ConceptNameType;
+import org.openmrs.api.ConceptService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.sana.api.MDSResponse;
 import org.openmrs.obs.ComplexData;
 
 import com.google.gson.Gson;
+
+import org.springframework.util.StringUtils;
+import org.springframework.validation.Errors;
 
 public class LexiconServlet extends HttpServlet {
 	
@@ -62,6 +62,12 @@ public class LexiconServlet extends HttpServlet {
         if(!request.getHeader("content-type").contains("application/x-www-form-urlencoded"))        
             return (List<FileItem>)upload.parseRequest(request);
         return new ArrayList<FileItem>();
+    }
+    
+    private void fail(PrintWriter output,String message, Throwable e) {
+    	e.printStackTrace(output);
+    	output.println("\nERROR: " + message + "\n");
+    	log.error(message);
     }
     
     private void fail(PrintWriter output,String message) {
@@ -86,11 +92,13 @@ public class LexiconServlet extends HttpServlet {
         String colConceptName = "";
         String colConceptClass = ""; 
         String colIdNum = "";
+        String colConceptDescription = "";
         
         List<FileItem> files;
         try {
             files = getUploadedFiles(request);
         } catch(FileUploadException e) {
+        	e.printStackTrace(output);
             fail(output, "Parsing uploaded files error " + e.toString());
             return;
         }
@@ -126,11 +134,14 @@ public class LexiconServlet extends HttpServlet {
      		else if (name.equals(Form.COLUMN_CONCEPT_NAME))
      			colConceptClass = f.getString();
      		else if (name.equals(Form.COLUMN_CONCEPT_CLASS))
-     			colIdNum = f.getString();
+     			colIdNum = f.getString();     		
+     		else if (name.equals(Form.COLUMN_CONCEPT_DESCRIPTION))
+         			colConceptDescription = f.getString();
     	}
     	
         //Check that concept source name is not null
-        if(conceptSourceName == null || conceptSourceName.equals("")){
+        if(!StringUtils.hasText(conceptSourceName)){// == null || conceptSourceName.equals("")){
+        	log.error("Problem with concept source name");
         	fail(output,"Concept source name can't be null or empty string");
         	return;
         }	
@@ -139,13 +150,15 @@ public class LexiconServlet extends HttpServlet {
         int columnIDNum = 0;
         int columnName = 0;
         int columnType = 0;
+        int columnDescription = 0;
         if(colIdNum != null && !colIdNum.equals(""))
         	columnIDNum = Integer.parseInt(colIdNum);
         if(colConceptName != null && !colConceptName.equals(""))
         	columnName = Integer.parseInt(colConceptName);
         if(colConceptClass != null && !colConceptClass.equals(""))
         	columnType = Integer.parseInt(colConceptClass);
-        
+        if(colConceptDescription != null && !colConceptDescription.equals(""))
+        	columnDescription = Integer.parseInt(colConceptDescription);
         
         //Get uploaded file name
         //Source: "Parse CSV File using String Tokenizer example"
@@ -196,10 +209,10 @@ public class LexiconServlet extends HttpServlet {
 	            		
 			        	//process the rest of the lines
 	            		else{
-				        	output.println("Processing line " + lineNumber + " of text: " + nextLine);
+				        	output.println("\nProcessing line " + lineNumber + " of text: " + nextLine);
 			        		
 			        		//Add a concept for this line of the csv file
-			        		result = addConcept(output, nextLine, cSource, columnIDNum, columnName, columnType, tokenNumber);
+			        		result = addConcept(output, nextLine, cSource, columnIDNum, columnName, columnType, tokenNumber, columnDescription);
 			        		
 			        		//If result is false, then stop execution because there is an error
 			        		if(!result)
@@ -251,7 +264,7 @@ public class LexiconServlet extends HttpServlet {
 	            		
 			        	//process the rest of the lines
 	            		else{
-				        	output.println("Processing line " + lineNumber + " of text: " + nextLine);
+				        	output.println("\nProcessing line " + lineNumber + " of text: " + nextLine);
 			        		
 			        		//Retire a concept for this line of the csv file
 			        		result = retireConcept(output, nextLine, cSource, columnIDNum, columnName, columnType, tokenNumber);
@@ -280,13 +293,14 @@ public class LexiconServlet extends HttpServlet {
 	            		
 			        	//process the rest of the lines
 	            		else{
-				        	output.println("Processing line " + lineNumber + " of text: " + nextLine);
+				        	output.println("\nProcessing line " + lineNumber + " of text: " + nextLine);
 			        		
  			        		//Add a concept for this line of the csv file
- 			        		result = addConcept(output, nextLine, cSource, columnIDNum, columnName, columnType, tokenNumber);
+ 			        		result = addConcept(output, nextLine, cSource, columnIDNum, columnName, columnType, tokenNumber,columnDescription);
 		        			
  			        		//If result is false, then stop execution because there is an error
 			        		if(!result)
+			        			output.println("Skipping Concept\n");
 			        			return;
  			        	}
  			        	
@@ -340,12 +354,23 @@ public class LexiconServlet extends HttpServlet {
         
     }
     
+    private boolean addConcept(PrintWriter output, String currentLine, 
+    		ConceptSource cSource, int columnIDNum, int columnName, 
+    		int columnType, int tokenNumber) throws ServletException
+    {
+    		return this.addConcept(output, currentLine, cSource, columnIDNum, 
+    				columnName, columnType, tokenNumber, -1);
+    }
+    
     /*
      *  Adds concept to dictionary
      *  
      *  @return True if successful, False if error
      */
-    private boolean addConcept(PrintWriter output, String currentLine, ConceptSource cSource, int columnIDNum, int columnName, int columnType, int tokenNumber) throws ServletException{
+    private boolean addConcept(PrintWriter output, String currentLine, 
+    		ConceptSource cSource, int columnIDNum, int columnName, 
+    		int columnType, int tokenNumber, int columnDescription) throws ServletException
+    {
     	//Separate line by commas
     	StringTokenizer stokenizer = new StringTokenizer(currentLine,",");
     	String token = "";
@@ -354,6 +379,7 @@ public class LexiconServlet extends HttpServlet {
         String conceptName = "";
         String idNum = "";
         String conceptClassName = "Misc";
+        String conceptDescription = "NA";
         
     	//Iterate through each comma separated string of the line
     	while(stokenizer.hasMoreTokens())
@@ -367,7 +393,7 @@ public class LexiconServlet extends HttpServlet {
     		}
     		//If this is the element in the column for concept names, save the name
     		else if(tokenNumber == columnName){
-    			conceptName = token.toUpperCase();
+    			conceptName = token.toUpperCase().trim();
     			output.println("Concept name: " + conceptName);
     		}
     		else if(tokenNumber == columnType)
@@ -378,47 +404,76 @@ public class LexiconServlet extends HttpServlet {
     				conceptClassName = "Finding";
     			output.println("Concept class: " + conceptClassName);
     		}
+    		else if(tokenNumber == columnDescription)
+    		{
+    			conceptDescription = token.trim();
+    			output.println("Concept description: " + conceptDescription);
+    		}
     		tokenNumber++;
     	}
+    	// Check for duplicate
     	
     	//Create the concept
     	//Make sure there is a concept name and ID number
-    	if(!conceptName.equals("") && !idNum.equals("")){
-    		Concept c = null;
-    		
-    		//Create new concept
-        	c = new Concept();
+    	
+    	if(StringUtils.hasText(conceptName)){//.equals("") && !idNum.equals("")){
+    		ConceptService cs = Context.getConceptService();
+        	Concept c = cs.getConcept(conceptName);
+        	if (c != null){
+        		log.warn("concept exists: " + conceptName);
+        		output.println("Concept Exists...." + conceptName);
+        		//c = cs.getConcept(c.getConceptId());
+        		// return true to skip existing concepts
+        		return true;
+        	} else 
+        		//Create new concept
+        		c = new Concept();
+        	
+        	Locale preferredLocale = Context.getLocale();
         	
         	//Set concept type to be "text"
-        	ConceptDatatype conceptType = Context.getConceptService().getConceptDatatypeByName("Text");
+        	ConceptDatatype conceptType = cs.getConceptDatatypeByName("Text");
         	c.setDatatype(conceptType);  
         	
         	//Set concept class 
-        	ConceptClass conceptClass = Context.getConceptService().getConceptClassByName(conceptClassName);
+        	ConceptClass conceptClass = cs.getConceptClassByName(conceptClassName);
             c.setConceptClass(conceptClass);
             c.setCreator(Context.getAuthenticatedUser());
             c.setDateCreated(new Date());
             
-            //Set concept name
-            ConceptName name = new ConceptName();
-            name.setName(conceptName);
-            name.setCreator(Context.getAuthenticatedUser());
-            name.setDateCreated(new Date());
-            name.setLocale(Context.getLocale());
-            c.addName(name);
+            // Set the name and description for each locale
+            for(Locale locale: Context.getAdministrationService().getAllowedLocales()){
+            	//Set concept name
+            	ConceptName name = new ConceptName(conceptName,locale);
+            	name.setCreator(Context.getAuthenticatedUser());
+            	//name.setDateCreated(new Date());
+            	//name.setConceptNameType(ConceptNameType.FULLY_SPECIFIED);
+            	c.setFullySpecifiedName(name);
+                c.setPreferredName(name);
             
             //Add mapping to SNOMED ID
-            ConceptMap mapping = new ConceptMap();
-            mapping.setSource(cSource);
-            mapping.setSourceCode(idNum);
-            c.addConceptMapping(mapping);
+            //ConceptMap mapping = new ConceptMap();
+            //mapping.setSource(cSource);
+            //mapping.setSourceCode(idNum);
+            //c.addConceptMapping(mapping);
+            
+            	// set the description
+            	ConceptDescription description = new ConceptDescription(
+            			conceptDescription, locale);
+            	description.setCreator(Context.getAuthenticatedUser());
+            	description.setDateCreated(new Date());
+            	c.addDescription(description);
+            }
             
             try{
-            	Context.getConceptService().saveConcept(c);
-            	output.println("Successfully added concept: " + c.getDisplayString()+"\n");
+            	log.debug("Atempting Save.... " + c.getDisplayString());
+            	cs.saveConcept(c);
+            	log.debug("Successfully added concept: " + c.getDisplayString()+"\n");
+            	//Concept ck = cs.getConcept(conceptName);
+            	//.debug("Found " + ck.getName() + ":" + ck.getId()+ ":"+ck.getFullySpecifiedName(locale));
             	return true;
             } catch(Exception e){
-            	fail(output, "Can't save concept " + e.toString());
+            	fail(output, "Can't save concept " + e.getMessage(),e);
             	return false;
             }
               
@@ -426,7 +481,7 @@ public class LexiconServlet extends HttpServlet {
     	fail(output, "No concept name or No ID number for line: " + currentLine);
     	return false;
     }
-    
+        
     /*
      *  Retires concept from dictionary
      *  
@@ -527,6 +582,7 @@ public class LexiconServlet extends HttpServlet {
 		public static final String COLUMN_CONCEPT_NAME = "columnConceptName";
 		public static final String COLUMN_CONCEPT_CLASS = "columnConceptClass";
 		public static final String COLUMN_ID_NUM = "columnIdNum";
+		public static final String COLUMN_CONCEPT_DESCRIPTION = "columnConceptDescription";
 		
 
 		public static final String CONCEPT_DIAGNOSIS = "Diagnosis";
