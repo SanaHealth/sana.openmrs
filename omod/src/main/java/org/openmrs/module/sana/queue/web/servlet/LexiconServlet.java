@@ -34,6 +34,7 @@ import org.openmrs.ConceptComplex;
 import org.openmrs.ConceptDatatype;
 import org.openmrs.ConceptDescription;
 import org.openmrs.ConceptMap;
+import org.openmrs.ConceptMapType;
 import org.openmrs.ConceptName;
 import org.openmrs.ConceptNameTag;
 import org.openmrs.ConceptSource;
@@ -89,6 +90,7 @@ public class LexiconServlet extends HttpServlet {
         FileItem newCsvFile = null;
         String conceptSourceName = "";
         String conceptSourceDescription = "";
+        String conceptSourceCode = "";
         String colConceptName = "";
         String colConceptClass = ""; 
         String colIdNum = "";
@@ -451,12 +453,6 @@ public class LexiconServlet extends HttpServlet {
             	c.setFullySpecifiedName(name);
                 c.setPreferredName(name);
             
-            //Add mapping to SNOMED ID
-            //ConceptMap mapping = new ConceptMap();
-            //mapping.setSource(cSource);
-            //mapping.setSourceCode(idNum);
-            //c.addConceptMapping(mapping);
-            
             	// set the description
             	ConceptDescription description = new ConceptDescription(
             			conceptDescription, locale);
@@ -464,6 +460,13 @@ public class LexiconServlet extends HttpServlet {
             	description.setDateCreated(new Date());
             	c.addDescription(description);
             }
+
+            //Add mapping to source ID
+            ConceptMapType mapType = cs.getConceptMapTypeByName("SAME-AS");
+            ConceptMap mapping = new ConceptMap();
+            mapping.setSource(cSource);
+            mapping.setSourceCode(idNum);
+            c.addConceptMapping(mapping);
             
             try{
             	log.debug("Atempting Save.... " + c.getDisplayString());
@@ -578,6 +581,7 @@ public class LexiconServlet extends HttpServlet {
 		public static final String CSV_FILE_NEW = "newCsvFile";
 		public static final String CSV_FILE_RETIRED = "retiredCsvFile";
 		public static final String CONCEPT_SOURCE_NAME = "conceptSourceName";
+		public static final String CONCEPT_SOURCE_CODE = "conceptSourceCode";
 		public static final String CONCEPT_SOURCE_DESCRIPTION = "conceptSourceDescription";
 		public static final String COLUMN_CONCEPT_NAME = "columnConceptName";
 		public static final String COLUMN_CONCEPT_CLASS = "columnConceptClass";
