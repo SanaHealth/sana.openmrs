@@ -37,6 +37,7 @@ import org.openmrs.ConceptMap;
 import org.openmrs.ConceptMapType;
 import org.openmrs.ConceptName;
 import org.openmrs.ConceptNameTag;
+import org.openmrs.ConceptReferenceTerm;
 import org.openmrs.ConceptSource;
 import org.openmrs.ConceptWord;
 import org.openmrs.api.ConceptNameType;
@@ -129,6 +130,8 @@ public class LexiconServlet extends HttpServlet {
     			retiredCsvFile = f;
      		else if (name.equals(Form.CONCEPT_SOURCE_NAME))
      			conceptSourceName = f.getString();
+     		else if (name.equals(Form.CONCEPT_SOURCE_CODE))
+     			conceptSourceCode = f.getString();
      		else if (name.equals(Form.CONCEPT_SOURCE_DESCRIPTION))
      			conceptSourceDescription = f.getString();
      		else if (name.equals(Form.COLUMN_CONCEPT_NAME))
@@ -138,11 +141,11 @@ public class LexiconServlet extends HttpServlet {
      		else if (name.equals(Form.COLUMN_CONCEPT_CLASS))
      			colIdNum = f.getString();     		
      		else if (name.equals(Form.COLUMN_CONCEPT_DESCRIPTION))
-         			colConceptDescription = f.getString();
+         		colConceptDescription = f.getString();
     	}
     	
         //Check that concept source name is not null
-        if(!StringUtils.hasText(conceptSourceName)){// == null || conceptSourceName.equals("")){
+        if(!StringUtils.hasText(conceptSourceName)){
         	log.error("Problem with concept source name");
         	fail(output,"Concept source name can't be null or empty string");
         	return;
@@ -167,32 +170,42 @@ public class LexiconServlet extends HttpServlet {
         //http://www.java-examples.com/parse-csv-file-using-stringtokenizer-example
         int lineNumber = 0, tokenNumber = 1;
         
-        try{
-        	if(action.equals(Form.ACTION_ADD)){
-		        if(csvFile != null){
-		        	
-		        	List<ConceptSource> sources = Context.getConceptService().getAllConceptSources();
-		        	
-		        	//Check that one doesn't already exist with that name
-		            Iterator<ConceptSource> iteratorSources = sources.iterator();
-		    		ConceptSource currentSource = null;
+        // Check for conceptSource
 
-		            while(iteratorSources.hasNext()){
-		            	currentSource = iteratorSources.next();
-		            	if(currentSource.getName().equals(conceptSourceName)){
-		            		//Concept source already exists with that name
-		            		fail(output,"Cannot use existing concept source name");
-		            		return;
-		            	}
+    	
+    	List<ConceptSource> sources = Context.getConceptService().getAllConceptSources();
+    	
+    	//Check that one doesn't already exist with that name
+        Iterator<ConceptSource> iteratorSources = sources.iterator();
+		ConceptSource currentSource = null;
+    	ConceptSource cSource = null;
+
+        while(iteratorSources.hasNext()){
+        	currentSource = iteratorSources.next();
+        	if(currentSource.getName().equals(conceptSourceName)){
+        		cSource = currentSource;
+        	}
+        }
+        
+        FormAction formAction = FormAction.valueOf(action.toUpperCase(Locale.ENGLISH));
+        try{
+        	switch(formAction){
+        	case ADD:
+		        if(csvFile != null){
+
+	            	//Concept source already exists with that name
+		            if(cSource != null){
+		            	fail(output,"Cannot use existing concept source name");
+		            	return;
 		            }
-		        
+		            
 		            //Set concept source fields 
-		        	ConceptSource cSource = new ConceptSource();
+		        	cSource = new ConceptSource();
 		        	cSource.setName(conceptSourceName);
 		        	cSource.setDescription(conceptSourceDescription);
 		        	cSource.setCreator(Context.getAuthenticatedUser());
 		        	cSource.setDateCreated(new Date());
-		        	cSource.setHl7Code("");
+		        	cSource.setHl7Code(conceptSourceCode);
 		        	cSource = Context.getConceptService().saveConceptSource(cSource);
 		        	
 		        	output.println("FOR CONCEPT SOURCE: " + conceptSourceName.toUpperCase() + "\n");
@@ -225,25 +238,8 @@ public class LexiconServlet extends HttpServlet {
 			        	lineNumber++;
 			        }
 		        }
-		       
-        	}
-        	else if(action.equals(Form.ACTION_UPDATE))
-        	{
-        		
-        		List<ConceptSource> sources = Context.getConceptService().getAllConceptSources();
-	        	
-	        	//Check that one doesn't already exist with that name
-	            Iterator<ConceptSource> iteratorSources = sources.iterator();
-	    		ConceptSource currentSource = null;
-	    		ConceptSource cSource = null;
-	    		
-	            while(iteratorSources.hasNext()){
-	            	currentSource = iteratorSources.next();
-	            	if(currentSource.getName().equals(conceptSourceName)){
-	            		cSource = currentSource;
-	            	}
-	            }
-	            
+		        break;
+        	case UPDATE:
 	            if(cSource == null){
 	            	fail(output,"Couldn't find concept source with the name " + conceptSourceName);
 	            	return;
@@ -311,40 +307,22 @@ public class LexiconServlet extends HttpServlet {
  			        	lineNumber++;
  			        }
  		        }
-        	}
-        	else if(action.equals(Form.ACTION_UPDATE)){
-        		
-        		output.println("FOR CONCEPT SOURCE: " + conceptSourceName.toUpperCase() + "\n");
-        		
-        		List<ConceptSource> sources = Context.getConceptService().getAllConceptSources();
-	        	
-	        	//Check that one doesn't already exist with that name
-	            Iterator<ConceptSource> iteratorSources = sources.iterator();
-	    		ConceptSource currentSource = null;
-	    		ConceptSource cSource = null;
+        		break;
+        	case DELETE:
+        		output.println("\nDELETE FOR CONCEPT SOURCE: " + conceptSourceName.toUpperCase() + "\n");
 	    		
-	            while(iteratorSources.hasNext()){
-	            	currentSource = iteratorSources.next();
-	            	if(currentSource.getName().equals(conceptSourceName)){
-	            		cSource = currentSource;
-	            	}
-	            }
-	            
 	            if(cSource == null){
 	            	fail(output,"Couldn't find concept source with the name " + conceptSourceName);
 	            	return;
 	            }
-	            
-	            cSource.setVoided(true);
-	            cSource.setVoidedBy(Context.getAuthenticatedUser());
-	            cSource.setDateVoided(new Date());
-	            cSource = Context.getConceptService().saveConceptSource(cSource);
-	            
+	            cSource = Context.getConceptService().purgeConceptSource(cSource);
 	            output.println("Just voided concept source " + conceptSourceName + "\n");
-        	}
-        	else{
+	            //}
+	            break;
+	        default:
         		fail(output, "Invalid action to perform on vocabulary terms (needs to be add, update, or delete)");
-        		return;
+        		//return;
+        		
         	}
         } catch(Exception e){
          	fail(output, "Can't read csv file " + e.toString());
@@ -423,15 +401,13 @@ public class LexiconServlet extends HttpServlet {
         	Concept c = cs.getConcept(conceptName);
         	if (c != null){
         		log.warn("concept exists: " + conceptName);
-        		output.println("Concept Exists...." + conceptName);
-        		//c = cs.getConcept(c.getConceptId());
+        		output.println("Concept " + conceptName + " Exists. UPDATE");
         		// return true to skip existing concepts
         		return true;
         	} else 
         		//Create new concept
         		c = new Concept();
         	
-        	Locale preferredLocale = Context.getLocale();
         	
         	//Set concept type to be "text"
         	ConceptDatatype conceptType = cs.getConceptDatatypeByName("Text");
@@ -461,11 +437,15 @@ public class LexiconServlet extends HttpServlet {
             	c.addDescription(description);
             }
 
+            // 
+            ConceptReferenceTerm conceptTerm = new ConceptReferenceTerm();
+            conceptTerm.setConceptSource(cSource);
+            conceptTerm.setCode(idNum.toString());
+            conceptTerm.setName(conceptName);
+            
             //Add mapping to source ID
             ConceptMapType mapType = cs.getConceptMapTypeByName("SAME-AS");
-            ConceptMap mapping = new ConceptMap();
-            mapping.setSource(cSource);
-            mapping.setSourceCode(idNum);
+            ConceptMap mapping = new ConceptMap(conceptTerm, mapType);
             c.addConceptMapping(mapping);
             
             try{
@@ -596,7 +576,9 @@ public class LexiconServlet extends HttpServlet {
     	
     }
     
-    
+    public static enum FormAction{
+    	ADD,UPDATE,DELETE;
+    }
 }
 
 

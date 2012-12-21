@@ -173,13 +173,24 @@ public class UploadServlet extends HttpServlet {
         		mds = MDSResponse.fail("Error parsing MDSMessage: " + ex);
 				throw ex;
         	}
-
-        	log.debug(message);
+        	if(log.isDebugEnabled())
+        		log.debug(String.format("Received (%s) responses from %s",
+        					message.questions.length, message.phoneId));
+        	
         	// First check if it exists
+        	/* 
+        	// this does nothing for now
         	String uuid = request.getParameter("caseIdentifier");
-        	if(uuid != null)
+        	if(uuid != null){
         		queueItem = Context.getService(QueueItemService.class)
         						.getQueueItemByUuid(uuid);
+        		if(log.isDebugEnabled())
+        			log.debug("updating queue item: " + uuid);
+        	} else {
+        		if(log.isDebugEnabled())
+        			log.debug("");
+        	}
+        	*/
         	// get the patient
         	try{
         		patient = getPatient(message.patientId);
@@ -335,6 +346,7 @@ public class UploadServlet extends HttpServlet {
 		
     	
     }
+    
     /**
      * Gets any files uploaded with this request.
      * @param request the original request.
@@ -356,43 +368,6 @@ public class UploadServlet extends HttpServlet {
     		throw new APIException("File POST Error",ex);
     	}
     	return files;
-    }
-    
-    
-    private Encounter createEncounter(Patient patient, Date encounterDateTime,
-    		Location location, EncounterType type, Provider provider,
-    		Concept question
-    		){
-    	/*
-		description.addRequiredProperty("encounterDatetime");
-		description.addRequiredProperty("patient");
-		description.addRequiredProperty("encounterType");
-		
-		description.addProperty("location");
-		description.addProperty("form");
-		description.addProperty("provider");
-		description.addProperty("orders");
-		description.addProperty("obs");
-		*/
-
-        Encounter e = new Encounter();
-        e.setPatient(patient);
-        e.setEncounterDatetime(encounterDateTime);
-        //e.setDateCreated(new Date());
-        e.setCreator(Context.getAuthenticatedUser());
-        e.setProvider(Context.getAuthenticatedUser().getPerson());
-        e.setLocation(location);
-        
-        // TODO(XXX) Replace these, catch exceptions, etc.
-        e.setForm(Context.getFormService().getAllForms().get(0));
-        e.setEncounterType(Context.getEncounterService().getAllEncounterTypes()
-        		.get(0));
-        Context.getEncounterService().saveEncounter(e);
-        Integer encounterId = e.getId();
-        log.debug("Encounter initialized");
-        Context.evictFromSession(e);
-    	return Context.getEncounterService().getEncounter(encounterId);
-        //return e;
     }
     
     private Map<String,List<FileItem>> parseFileObs(MDSMessage message, 
@@ -423,57 +398,7 @@ public class UploadServlet extends HttpServlet {
         }
         return fileMap;
     }
-    
-    /** 
-     * @throws ParseException 
-     * @deprecated
-     */
-    private Set<Obs> makeObsSet(Encounter encounter, Patient patient, MDSMessage message, 
-    		List<FileItem> files, Date date) throws IOException, ParseException
-    {
-    	Set<Obs> observations = new HashSet<Obs>();
-        Map<String,List<FileItem>> fileMap = parseFileObs(message, files);
-		log.debug("Sana.UploadServlet.createObsSet(): file count: "
-				+ ((fileMap != null)? fileMap.size(): "EMPTY"));
-		
-    	// Create the observations
-        for(MDSQuestion q : message.questions) {
-        	Obs obs = null;
-            // Get Concept for Type/ID
-            Concept c = getOrCreateConcept(q.type, q.concept, q.question);
-            boolean isComplex = c.isComplex();
-            
-            // 1.x versions allow multiple files per question so we need to
-            // make one observation per file
-            if(isComplex) {
-                // If no file was uploaded, then there is no obs to make.
-                if(fileMap.containsKey(q.id)) {
-                    // Make one obs per file
-                    for(FileItem f : fileMap.get(q.id)) {
-                    	obs = makeObs(encounter,patient,date,c, q, f);
-                    }
-                } else {
-                	// No observation if no files
-                	obs = null;
-                }
-            } else {
-                // Not complex, make a regular obs 
-            	obs = makeObs(encounter, patient,date,c, q, null);
-            }
-            if (obs != null){
-            	log.debug("Sana.UploadServlet.createObsSet():"
-        				+ "Eid: " + q.id + ", Concept: " + q.concept 
-        				+ ", Obs created. Complex = "
-        				+ ((obs.getComplexData() != null)? obs.getValueComplex(): "False"));
-            	observations.add(obs);
-            } else
-        		log.debug("Sana.UploadServlet.createObsSet():"
-        				+ "Eid: " + q.id + ", Concept: " + q.concept 
-        				+ ", Obs not created. Complex type No FIle");
-        }
-        return observations;
-    }
-    
+   
     /**
      * Parses an MDSMessage, validates the Concepts and returns a Map of the
      * question ids to Concept objects
@@ -666,10 +591,10 @@ public class UploadServlet extends HttpServlet {
 		// Search for a concept name precisely 
         c = cs.getConcept(name);
         if (c != null){
-        	log.debug("Found exact match!");
+        	log.debug("Found exact match!" + name);
         	return c;
         } else {
-        	throw new NullPointerException("Concept not found");
+        	throw new NullPointerException("Concept not found:" + name);
         }
         
     }
@@ -690,6 +615,7 @@ public class UploadServlet extends HttpServlet {
      * 
      * @deprecated
      */
+
     private Obs makeObs(Patient p, Concept c, MDSQuestion q, FileItem f) 
     	throws IOException 
     {
@@ -714,7 +640,7 @@ public class UploadServlet extends HttpServlet {
     }
     
     /**
-     * Connstructs a new Observation. And saves it in the database. 
+     * Constructs a new Observation. And saves it in the database. 
      * 
      * This version of makeObs is intended to be forward compatible, OpenMRS
      * ver. greater than 1.6, by handling modifications to the OpenMRS 
