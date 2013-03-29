@@ -214,6 +214,10 @@
 		<lang>en</lang>
 		<file>messages.properties</file>
 	</messages>
+    <messages>
+        <lang>pt</lang>
+        <file>messages_pt.properties</file>
+    </messages>
 	<!-- /Internationalization -->
 	
 	<mappingFiles>
