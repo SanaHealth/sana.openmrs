@@ -20,7 +20,7 @@ import org.openmrs.module.webservices.rest.web.resource.impl.DataDelegatingCrudR
 import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceDescription;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
 
-@Resource("queueitem")
+@Resource(name = "queueitem", supportedClass = QueueItem.class, supportedOpenmrsVersions = { "1.9" })
 @Handler(supports = { QueueItem.class }, order=0)
 public class QueueItemResource extends DataDelegatingCrudResource<QueueItem>{
 
