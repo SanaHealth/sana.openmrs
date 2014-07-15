@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping(value = "/rest/"+Module.ID+"/queue/queueitem")
 public class QueueItemController extends BaseRestController{
-
+	
+	@Override
+    public String getNamespace() {
+        return "v1/" +Module.ID+"/queue/queueitem" ;
+    }
 	
 }
