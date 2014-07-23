@@ -71,8 +71,6 @@ public class QueueController {
         return q;
     }
 
-    
-
     @RequestMapping(value = "queue.form")
     public ModelAndView onRequest(HttpServletRequest request, 
         HttpServletResponse response) 
@@ -96,33 +94,7 @@ public class QueueController {
         log.warn("In Method: onDeferredRequest()");
         return onRequestInternal(request, response, QueueItemStatus.DEFERRED);
     }
-
-    /*
-    @RequestMapping(value = "queue.form",method = RequestMethod.GET)
-    public ModelAndView onGetForm(HttpServletRequest request, 
-        HttpServletResponse response) 
-    {
-        log.warn("In Method: onGetForm()");
-        return onRequestInternal(request, response, QueueItemStatus.NEW);
-    }
     
-    @RequestMapping(value = "queueClosed.form",method = RequestMethod.GET)
-    public ModelAndView onGetClosedForm(HttpServletRequest request, 
-        HttpServletResponse response) 
-    {
-        log.warn("In Method: onGetClosedForm()");
-        return onRequestInternal(request, response, QueueItemStatus.CLOSED);
-    }
-
-
-    @RequestMapping(value = "queueDeferred.form",method = RequestMethod.GET)
-    public ModelAndView onGetDeferredForm(HttpServletRequest request, 
-        HttpServletResponse response) 
-    {
-        log.warn("In Method: onGetDeferredForm()");
-        return onRequestInternal(request, response, QueueItemStatus.DEFERRED);
-    }
-    */
     public static final String ORDER_BY = "hidsortname";
     public static final String LIMIT = "limit";
     public static final String START = "gotopagename";
