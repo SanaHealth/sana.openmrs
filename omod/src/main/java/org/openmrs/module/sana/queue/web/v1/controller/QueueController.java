@@ -134,11 +134,13 @@ public class QueueController {
     public static final String FORMAT = "disformate";
 
     public static final String OBJECTS = "queueItems";
-    public static final String PROCEDURES = "proceduers";
+    public static final String PROCEDURES = "procedures";
     public static final String DATES = "dates";
     public static final String SIZE = "queuesize";
+    public static final String MAX_SIZE = "maxsize";
     public static final String PAGES = "count";
     public static final String PAGE = "start";
+    public static final String QUEUE_STATUS = "queuestatus";
 
     public ModelAndView onRequestInternal(HttpServletRequest request,
         HttpServletResponse response, QueueItemStatus status) 
@@ -154,7 +156,7 @@ public class QueueController {
                 .getAdministrationService().getGlobalProperty(
                         Property.MAX_QUEUE_ITEMS));
         Integer queuelistcountObj = new Integer(queuelistcount);
-        // String queueLimit = request.getParameter(LIMIT);
+        //String queueSize = request.getParameter(SIZE);
         int sortvalue = 0;
 
         String sortstring = getParameter(request, ORDER_BY);
@@ -171,6 +173,8 @@ public class QueueController {
         String limit = getParameter(request, LIMIT);
         if (!limit.isEmpty())
             endvalue = Integer.parseInt(limit);
+        else
+            limit = String.valueOf(queuelistcount);
         int startvalue = 0;
 
         // the starting page
@@ -275,11 +279,16 @@ public class QueueController {
         map.put(OBJECTS, items);
         map.put(PROCEDURES, procedurelist);
         map.put(DATES, dateitems);
-        map.put(LIMIT, queuelistcountObj);
+        map.put(LIMIT, Integer.parseInt(limit));
         map.put(SIZE, items.size());
+        map.put(MAX_SIZE, queuelistcountObj);
         map.put(PAGES, count);
         map.put(PAGE, pageno);
         
+        // set the status
+        map.put(QUEUE_STATUS, status);
+        
+        request.setAttribute("proname", "SHOW ALL");
         request.setAttribute("proname", "SHOW ALL");
         log.debug("Returning " + items.size() + " " +status + " queue items");
 
