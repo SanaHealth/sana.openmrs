@@ -16,7 +16,7 @@
         <developerConnection>scm:git:https://github.com/SanaMobile/sana.openmrs.git</developerConnection>
     </scm>
     <organization>
-        <name>Sana</name>
+        <name>Sana Mobile</name>
         <url>http://sana.mit.edu</url>
     </organization>
     <url>http://sana.mit.edu</url>
