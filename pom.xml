@@ -11,9 +11,9 @@
 
 
     <scm>
-        <url>https://github.com/SanaHealth/sana.openmrs.git</url>
-        <connection>scm:git:https://github.com/SanaHealth/sana.openmrs.git</connection>
-        <developerConnection>scm:git:https://github.com/SanaHealth/sana.openmrs.git</developerConnection>
+        <url>https://github.com/SanaMobile/sana.openmrs.git</url>
+        <connection>scm:git:https://github.com/SanaMobile/sana.openmrs.git</connection>
+        <developerConnection>scm:git:https://github.com/SanaMobile/sana.openmrs.git</developerConnection>
     </scm>
     <organization>
         <name>Sana</name>
