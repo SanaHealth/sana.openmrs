@@ -163,9 +163,14 @@ public class ThumbnailingImageHandler extends ImageHandler implements
     /** {@inheritDoc} */
     @Override
     public Obs saveObs(Obs obs) throws APIException {
+    	// Do a null check here
+    	if(obs.getComplexData() == null){
+    		log.warn("Obs[], id="+obs.getId()+", save with null complex data");
+			throw new APIException("Obs.error.cannot.save.complex Obs[" + obs.getObsId()+"]");
+    	}
+
         // Get the buffered image from the ComplexData.
-        Object data = obs.getComplexData().getData();
-        String extension = getExtension(obs.getComplexData().getTitle());
+		Object data = obs.getComplexData().getData();
         File output = null;
         FileInputStream in = null; 
         OutputStream out = null;
@@ -198,7 +203,9 @@ public class ThumbnailingImageHandler extends ImageHandler implements
         } catch (InterruptedException e) {
         	e.printStackTrace();
         }
+    	// The rest of this block is so that we are consistent with the super class
     	// Set the Title and URI for the valueComplex
+        String extension = getExtension(obs.getComplexData().getTitle());
     	obs.setValueComplex(extension + " image |" + output.getName());
     	// Remove the ComlexData from the Obs
     	obs.setComplexData(null);
