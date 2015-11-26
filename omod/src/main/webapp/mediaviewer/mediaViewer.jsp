@@ -4,7 +4,7 @@
 <style>
 .viewerContainer{
   width: 100%;
-  height: 100%;s
+  height: 100%;
   position: relative;
 }
 
