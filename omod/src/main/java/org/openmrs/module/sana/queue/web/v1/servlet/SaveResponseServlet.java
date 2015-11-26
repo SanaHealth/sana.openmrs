@@ -153,7 +153,7 @@ public class SaveResponseServlet extends HttpServlet {
     		doctorDiagnosis = "";
     	}
     	
-    	log.error("Diagnosis " + doctorDiagnosis);
+    	log.info("Diagnosis is null=" + (doctorDiagnosis == null));
     	
     	if(doctorUrgency != null && !doctorUrgency.equals("")){
         	//Create a new obs with the doctor's response
@@ -187,7 +187,7 @@ public class SaveResponseServlet extends HttpServlet {
     		doctorUrgency = "";
     	}
     	
-    	log.debug("doctorUrgency " + doctorUrgency);
+    	log.warn("doctorUrgency " + doctorUrgency);
     	
         if(doctorTreatment != null && !doctorTreatment.equals("")){
         	//Create a new obs with the doctor's response
@@ -222,8 +222,6 @@ public class SaveResponseServlet extends HttpServlet {
         	doctorTreatment = "";
         }
         
-        log.debug("doctorTreatment " + doctorTreatment);
-        
         if(doctorComments != null && !doctorComments.equals("")){
         	//Create a new obs with the doctor's response
             Obs o = new Obs();
@@ -237,6 +235,7 @@ public class SaveResponseServlet extends HttpServlet {
             if(commentsConcept != null)
             	o.setConcept(commentsConcept);
             else{
+            	log.error("Create concept 'DOCTOR COMMENTS'");
             	fail(output,"Couldn't find concept DOCTOR COMMENTS. Go to "
             			+"Concept Dictionary and add this concept.");
             	return;
@@ -255,8 +254,6 @@ public class SaveResponseServlet extends HttpServlet {
         	doctorComments = "";
         }
         
-        log.debug("doctorComments " + doctorComments);
-        
         //Set plan
         String plan = "";
         if(doctorTreatment.equals("") && doctorComments.equals(""))
@@ -267,8 +264,10 @@ public class SaveResponseServlet extends HttpServlet {
         	plan = doctorTreatment;
         else
         	plan = doctorTreatment + ", " + doctorComments;
-        
-    	Context.getEncounterService().saveEncounter(e);
+        // TODO
+        // Commenting this out for now
+        // Can not find reason to save encounter here
+    	//Context.getEncounterService().saveEncounter(e);
         q.setEncounter(e);
     	q.setStatus(QueueItemStatus.CLOSED);
     	q.setDateChanged(new Date());
@@ -285,7 +284,9 @@ public class SaveResponseServlet extends HttpServlet {
     	// TODO Come up with a better way to trigger notification type
 		//Send sms
 		try{
+			log.info("Sending SMS");
 			boolean sms = sendSMS(q, diagnosisList, plan, patientId);
+			log.warn("SMS success=" + sms);
 		} catch (ConnectException err) {
     		log.error("Couldn't connect to notification server " 
     			+ Context.getAdministrationService().getGlobalProperty(Property.MDS_URI));
@@ -300,7 +301,9 @@ public class SaveResponseServlet extends HttpServlet {
     		// specialist response to them if they indicated so in their user
     		// profile
 			if(notificationPref.equalsIgnoreCase("email")){
-				boolean email = sendMail(q, diagnosisList, plan, patientId, doctorUrgency);	
+				log.info("Sending EMAIL");
+				boolean email = sendMail(q, diagnosisList, plan, patientId, doctorUrgency);
+				log.debug("Email success=" + email);	
 			}
 		} catch (ConnectException err) {
 			log.error("Couldn't connect to email notification server " 
@@ -340,7 +343,7 @@ public class SaveResponseServlet extends HttpServlet {
 		log.debug("Sending sms -> " + smsNumber);
 		boolean sms = MDSNotificationReply.sendSMS(smsNumber, 
 				q.getCaseIdentifier(), patientId, SMSmessage);
-		log.debug("sms sent -> " + smsNumber + ", success: " + sms);
+		log.info("sms sent -> " + smsNumber + ", success: " + sms);
 		return sms;
     }
     
@@ -401,7 +404,7 @@ public class SaveResponseServlet extends HttpServlet {
 		} else {
 			log.warn("Null email address");
 		}
-    	log.debug(": email -> " + "success: " + email);
+    	log.info(": email -> " + "success: " + email);
 		return email;
     }
 }
