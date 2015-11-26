@@ -97,37 +97,36 @@ function retake() {
 
 <style>
 
-html, body {
-margin:0;
-padding:0;
-border:0;
-height:96%;
-width:100%;
-}
-
-.leftBox {
-  border: 1px solid #6D9BC5;
-  width: 28%;
-  height: 100%;
-  float: left;
-  background-color: #C6D9F1;
-  overflow:auto;
-  scrollbar-base-color: transparent;
-  scrollbar-arrow-color: transparent;
-}
-
-.rightBox {
-  border: 1px solid #6D9BC5;
-  width: 70%;
-  height: 100%;
-  float: left;
-}
-
 .bigContainer{
-  min-height: 584px;
+  height: 100%;
   width: 100%;
   position: relative;
 }
+
+.ui-table{
+  background-color: #C6D9F1;
+  display: table;
+}
+.ui-table-row{
+  display: table-row;
+}
+.ui-table-cell{
+  display: table-cell;
+  vertical-align: top;
+}
+.leftBox {
+  overflow:auto;
+  scrollbar-base-color: transparent;
+  scrollbar-arrow-color: transparent;
+  width: 384px;
+  height: 100%;
+}
+
+.rightBox {
+  height: 100%;
+  overflow: hidden;
+}
+
 
 .foot {
  float:left;
@@ -249,10 +248,26 @@ input.collapseButton {
 	scrollbar-base-color: transparent;
     scrollbar-arrow-color: transparent;
 }
-
+.mediaWrapper {
+  position:absolute;
+  height: 100%;
+  width: calc(100% - 384px);
+  width: -moz-calc(100% - 384px);
+  width: -webkit-calc(100% - 384px);
+  min-width: 512px;
+}
+.mediaWrapper div,
+.mediaWrapper embed, 
+.mediaWrapper object {
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+}
 </style>
-<div class="bigContainer" id="container">
-	<div class="leftBox" id="leftContainer">
+<div class="bigContainer ui-table" id="container">
+  <div class="ui-table-row">
+	<div class="leftBox ui-table-cell" id="leftContainer">
 		<h1><a href="${pageContext.request.contextPath}/patientDashboard.form?patientId=${encounter.queueItem.patient.patientId }">${encounter.queueItem.patient.familyName}, ${encounter.queueItem.patient.givenName}</a> (<spring:message code="sana.id" /> ${encounter.queueItem.patient.patientIdentifier}) ${encounter.queueItem.patient.age} ${encounter.queueItem.patient.gender}</h1>
 		<h3><spring:message code="sana.status" />: ${encounter.status}</h3>
 		<div id="pastDiagnoses" class="patientInfo"><p>${encounter.existingDiagnoses}</p></div>
@@ -295,10 +310,11 @@ input.collapseButton {
 	 	</div>
 	</div>
 	
-	<div class="rightBox" id="rightContainer">
+	<div class="rightBox ui-table-cell" id="rightContainer">
+		<div class="mediaWrapper">
+		<div class="mediaContent">
 		<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"
 					id="TestViewer" 
-					width="100%" height="100%"
 					codebase="http://fpdownload.macromedia.com/get/flashplayer/current/swflash.cab">
 					<param name="movie" value="${pageContext.request.contextPath}/moduleResources/sana/MediaFileViewer2.swf" />
 					<param name="quality" value="high" />
@@ -306,8 +322,9 @@ input.collapseButton {
 					<param name="allowScriptAccess" value="always" />
 					<param name="allowFullScreen" value="true" />
 					<param name="FlashVars" value="patientFirstName=${encounter.queueItem.patient.givenName}&patientLastName=${encounter.queueItem.patient.familyName}&dateUploaded=${encounter.queueItem.dateUploaded}&encounterID=${encounter.queueItem.encounterId}&contextPath=${pageContext.request.contextPath}">
-					<embed src="${pageContext.request.contextPath}/moduleResources/sana/MediaFileViewer2.swf" quality="high" bgcolor="#869ca7"
-						width="100%" height="100%" 
+					<embed src="${pageContext.request.contextPath}/moduleResources/sana/MediaFileViewer2.swf" 
+						quality="high" 
+						bgcolor="#869ca7"
 						name="TestViewer" 
 						align="middle"
 						play="true"
@@ -318,12 +335,12 @@ input.collapseButton {
 						type="application/x-shockwave-flash"
 						FlashVars="patientFirstName=${encounter.queueItem.patient.givenName}&patientLastName=${encounter.queueItem.patient.familyName}&dateUploaded=${encounter.queueItem.dateUploaded}&encounterID=${encounter.queueItem.encounterId}&contextPath=${pageContext.request.contextPath}"
 						pluginspage="http://www.adobe.com/go/getflashplayer">
-					</embed>
+						</embed>
 			</object>
+			</div>
+		</div>
 	</div>
+  </div>
 </div>
-<div style="clear: both;"></div>
+  <div style="clear: both;"></div>
 <%@ include file="/WEB-INF/template/footer.jsp"%>
-
-
-
